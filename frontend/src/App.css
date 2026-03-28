@@ -1,7 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Sora:wght@400;500;600;700&display=swap");
+
 :root {
-  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-  color: #11313f;
-  background: radial-gradient(circle at 20% 20%, #edf8f9 0%, #cde4ea 40%, #b7d6df 100%);
+  font-family: "Sora", "Segoe UI", sans-serif;
+  color: #f7f3f4;
+  background:
+    radial-gradient(circle at 68% 10%, rgba(255, 35, 35, 0.25) 0%, rgba(255, 35, 35, 0) 33%),
+    radial-gradient(circle at 15% 85%, rgba(215, 26, 26, 0.22) 0%, rgba(215, 26, 26, 0) 35%),
+    linear-gradient(155deg, #060505 0%, #0b0708 45%, #070506 100%);
   line-height: 1.4;
 }
 
@@ -12,26 +17,61 @@
 body {
   margin: 0;
   min-height: 100vh;
+  background: transparent;
+}
+
+.app-shell {
+  position: relative;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.app-header {
+  text-align: center;
+  padding: 0.55rem 0 0.75rem;
+}
+
+.control-panel,
+.maze-panel {
+  backdrop-filter: blur(4px);
+}
+
+.brand-title {
+  font-family: "Orbitron", "Sora", sans-serif;
+  color: #fdf8f8;
+  text-shadow: 0 0 18px rgba(255, 62, 62, 0.25);
+}
+
+.brand-accent {
+  color: #ff4b45;
+  text-shadow: 0 0 20px rgba(255, 56, 56, 0.6);
 }
 
 .maze-grid {
   display: grid;
-  width: min(100%, 760px);
+  max-width: 100%;
   aspect-ratio: 1 / 1;
-  gap: 3px;
+  gap: 4px;
+  margin: 0 auto;
+  align-content: stretch;
 }
 
 .maze-cell {
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
   padding: 0;
-  border-radius: 6px;
-  background: #f1fafc;
-  color: #1f5e73;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 8px;
+  background: linear-gradient(165deg, rgba(52, 56, 68, 0.92), rgba(36, 40, 50, 0.94));
+  color: #f2d8d8;
   font-weight: 700;
-  border: 1px solid rgba(31, 94, 115, 0.2);
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  border: 1px solid rgba(255, 98, 98, 0.16);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 }
 
 .maze-cell.clickable {
@@ -40,39 +80,67 @@ body {
 
 .maze-cell.clickable:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(31, 94, 115, 0.18);
+  border-color: rgba(255, 89, 89, 0.4);
+  box-shadow: 0 2px 12px rgba(255, 70, 70, 0.18);
 }
 
 .maze-cell.wall {
-  background: #31505d;
-  border-color: #243c46;
+  background: linear-gradient(170deg, #181318, #0f0d10);
+  border-color: rgba(255, 62, 62, 0.12);
   color: transparent;
 }
 
 .maze-cell.visited {
-  background: #f8c471;
+  background: linear-gradient(160deg, rgba(142, 36, 36, 0.9), rgba(196, 55, 55, 0.9));
+  color: #ffe3e3;
 }
 
 .maze-cell.start {
-  background: #58d68d;
-  color: #104d2b;
+  background: linear-gradient(160deg, #ff694b, #ff3f3f);
+  color: #fff5f5;
 }
 
 .maze-cell.goal {
-  background: #ff9f68;
-  color: #6b2f00;
+  background: linear-gradient(160deg, #ffb04b, #ff6d3f);
+  color: #2b1510;
 }
 
 .maze-cell.current {
-  background: #38bdf8;
-  color: #0f3d54;
-  transform: scale(1.03);
+  background: linear-gradient(160deg, #ffe0e0, #ff9c9c);
+  color: #4d1818;
+  transform: scale(1.04);
+}
+
+.result-card {
+  border: 1px solid rgba(255, 87, 87, 0.22);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  background: linear-gradient(165deg, rgba(49, 28, 31, 0.58), rgba(19, 13, 15, 0.65));
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.result-placeholder {
+  border: 1px dashed rgba(255, 102, 102, 0.36);
+  border-radius: 12px;
+  padding: 0.85rem 0.9rem;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
 }
 
 .maze-placeholder {
-  color: #2c5868;
+  color: #c8b5b7;
   text-align: center;
-  font-size: 1.05rem;
+  font-size: 1.03rem;
   max-width: 320px;
   margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .app-header {
+    padding-top: 0.25rem;
+  }
 }

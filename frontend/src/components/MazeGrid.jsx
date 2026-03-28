@@ -4,11 +4,13 @@ function keyFor(row, col) {
   return `${row}-${col}`;
 }
 
-export default function MazeGrid({ maze, start, goal, path, currentStep, onCellClick }) {
-  if (!maze || maze.length === 0) {
+export default function MazeGrid({ maze, start, goal, path, currentStep, onCellClick, pixelSize = 760 }) {
+  if (!maze || maze.length === 0 || !maze[0]?.length) {
     return <div className="maze-placeholder">Design a maze, then run a simulation.</div>;
   }
 
+  const rows = maze.length;
+  const cols = maze[0].length;
   const isInteractive = typeof onCellClick === "function";
   const visited = new Set(path.slice(0, currentStep + 1).map(([r, c]) => keyFor(r, c)));
   const current = path[currentStep] || null;
@@ -16,7 +18,11 @@ export default function MazeGrid({ maze, start, goal, path, currentStep, onCellC
   return (
     <div
       className="maze-grid"
-      style={{ gridTemplateColumns: `repeat(${maze[0].length}, minmax(20px, 1fr))` }}
+      style={{
+        gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+        gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
+        width: `min(100%, ${pixelSize}px)`,
+      }}
     >
       {maze.map((row, rowIndex) =>
         row.map((cell, colIndex) => {
