@@ -1,4 +1,4 @@
-# RL Maze Simulator (Python Gym + React)
+# mazeR Lab
 
 This project contains:
 

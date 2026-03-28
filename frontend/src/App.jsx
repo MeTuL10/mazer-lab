@@ -1,4 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Divider,
+  MenuItem,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
 import MazeGrid from "./components/MazeGrid";
 import { fetchModels, runSimulation } from "./api";
 
@@ -65,6 +83,12 @@ export default function App() {
   const [tileTool, setTileTool] = useState("wall");
   const [mazeDesign, setMazeDesign] = useState(createMazeDesign(DEFAULT_GRID_SIZE));
 
+  const [expandedPanels, setExpandedPanels] = useState({
+    maze: true,
+    model: true,
+    result: true,
+  });
+
   useEffect(() => {
     async function loadModels() {
       try {
@@ -106,8 +130,18 @@ export default function App() {
   const maxRandomWalls = mazeDesign.size * mazeDesign.size - 2;
 
   const canRun = useMemo(() => {
-    return form.model_id && !loading;
+    return Boolean(form.model_id) && !loading;
   }, [form.model_id, loading]);
+
+  const selectedModel = useMemo(() => {
+    return models.find((item) => item.id === form.model_id)?.name || "No model selected";
+  }, [models, form.model_id]);
+
+  function handlePanelToggle(panel) {
+    return (_event, isExpanded) => {
+      setExpandedPanels((prev) => ({ ...prev, [panel]: isExpanded }));
+    };
+  }
 
   function resetSimulationView() {
     setSimResult(null);
@@ -120,8 +154,7 @@ export default function App() {
     setMazeDesign((prev) => mutator(prev));
   }
 
-  function handleCreateGrid(event) {
-    event.preventDefault();
+  function handleCreateGrid() {
     setError("");
     const size = clamp(
       Math.floor(parseNumericInput(gridSizeInput, DEFAULT_GRID_SIZE)),
@@ -227,8 +260,7 @@ export default function App() {
     });
   }
 
-  async function onRunSimulation(event) {
-    event.preventDefault();
+  async function onRunSimulation() {
     setError("");
     setLoading(true);
     setIsAnimating(false);
@@ -252,6 +284,7 @@ export default function App() {
       setSimResult(result);
       setCurrentStep(0);
       setIsAnimating(true);
+      setExpandedPanels((prev) => ({ ...prev, result: true }));
     } catch (err) {
       setError(err.message || "Simulation failed.");
     } finally {
@@ -265,183 +298,228 @@ export default function App() {
   const displayPath = simResult?.path || [];
 
   return (
-    <main className="page">
-      <section className="panel">
-        <h1>RL Maze Simulator</h1>
-        <p>Design a maze, choose an RL model, and watch it learn the path.</p>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        p: 2,
+        display: "grid",
+        gap: 2,
+        gridTemplateColumns: { xs: "1fr", md: "minmax(340px, 430px) 1fr" },
+      }}
+    >
+      <Paper sx={{ p: 2, borderRadius: 3 }} elevation={4}>
+        <Typography variant="h4" sx={{ mb: 1 }}>
+          RL Maze Simulator
+        </Typography>
+        <Typography variant="body1" sx={{ color: "text.secondary", mb: 2 }}>
+          Configure the maze and model, then run training and watch path replay.
+        </Typography>
 
-        <section className="designer-card">
-          <h2>Maze Designer</h2>
-          <form className="designer-grid-size" onSubmit={handleCreateGrid}>
-            <label>
-              Grid Size (n x n)
-              <input
-                type="number"
-                min={MIN_GRID_SIZE}
-                max={MAX_GRID_SIZE}
-                value={gridSizeInput}
-                onChange={(e) => setGridSizeInput(e.target.value)}
-              />
-            </label>
-            <button type="submit">Create Grid</button>
-          </form>
+        <Accordion expanded={expandedPanels.maze} onChange={handlePanelToggle("maze")}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                Maze Design
+              </Typography>
+              <Chip label={`${mazeDesign.size}x${mazeDesign.size}`} size="small" />
+              <Chip label={`Walls: ${wallCount}`} size="small" />
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={1.5}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
+                <TextField
+                  size="small"
+                  label="Grid Size (n)"
+                  type="number"
+                  value={gridSizeInput}
+                  inputProps={{ min: MIN_GRID_SIZE, max: MAX_GRID_SIZE }}
+                  onChange={(e) => setGridSizeInput(e.target.value)}
+                />
+                <Button variant="contained" onClick={handleCreateGrid}>
+                  Create Grid
+                </Button>
+              </Stack>
 
-          <div className="tool-row">
-            <span className="tool-label">Tile Tool</span>
-            {[
-              ["start", "Place Start"],
-              ["goal", "Place Goal"],
-              ["wall", "Toggle Wall"],
-              ["erase", "Erase Wall"],
-            ].map(([id, label]) => (
-              <button
-                type="button"
-                key={id}
-                className={`tool-btn ${tileTool === id ? "active" : ""}`}
-                onClick={() => setTileTool(id)}
+              <Divider />
+
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                {[
+                  ["start", "Place Start"],
+                  ["goal", "Place Goal"],
+                  ["wall", "Toggle Wall"],
+                  ["erase", "Erase Wall"],
+                ].map(([id, label]) => (
+                  <Button
+                    key={id}
+                    size="small"
+                    variant={tileTool === id ? "contained" : "outlined"}
+                    onClick={() => setTileTool(id)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </Stack>
+
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
+                <TextField
+                  size="small"
+                  label="Random Walls (m)"
+                  type="number"
+                  value={wallCountInput}
+                  inputProps={{ min: 0, max: maxRandomWalls }}
+                  onChange={(e) => setWallCountInput(e.target.value)}
+                />
+                <Button variant="outlined" onClick={handleRandomWalls}>
+                  Generate Random Walls
+                </Button>
+                <Button variant="outlined" color="inherit" onClick={handleClearWalls}>
+                  Clear Walls
+                </Button>
+              </Stack>
+
+              <Typography variant="body2" color="text.secondary">
+                Start: [{mazeDesign.start[0]}, {mazeDesign.start[1]}] | Goal: [{mazeDesign.goal[0]}, {mazeDesign.goal[1]}]
+              </Typography>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion expanded={expandedPanels.model} onChange={handlePanelToggle("model")}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                Model & Parameters
+              </Typography>
+              <Chip label={selectedModel} size="small" />
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={1.2}>
+              <TextField
+                select
+                size="small"
+                label="Model"
+                value={form.model_id}
+                onChange={(e) => setForm((prev) => ({ ...prev, model_id: e.target.value }))}
               >
-                {label}
-              </button>
-            ))}
-          </div>
+                {models.map((model) => (
+                  <MenuItem key={model.id} value={model.id}>
+                    {model.name}
+                  </MenuItem>
+                ))}
+              </TextField>
 
-          <div className="wall-controls">
-            <label>
-              Random Walls (m)
-              <input
+              <TextField
+                size="small"
+                label="Episodes"
                 type="number"
-                min="0"
-                max={maxRandomWalls}
-                value={wallCountInput}
-                onChange={(e) => setWallCountInput(e.target.value)}
+                value={form.episodes}
+                inputProps={{ min: 1, max: 10000 }}
+                onChange={(e) => setForm((prev) => ({ ...prev, episodes: e.target.value }))}
               />
-            </label>
-            <button type="button" onClick={handleRandomWalls}>
-              Generate Random Walls
-            </button>
-            <button type="button" onClick={handleClearWalls}>
-              Clear Walls
-            </button>
-          </div>
+              <TextField
+                size="small"
+                label="Alpha"
+                type="number"
+                value={form.alpha}
+                inputProps={{ min: 0.01, max: 1, step: 0.01 }}
+                onChange={(e) => setForm((prev) => ({ ...prev, alpha: e.target.value }))}
+              />
+              <TextField
+                size="small"
+                label="Gamma"
+                type="number"
+                value={form.gamma}
+                inputProps={{ min: 0.01, max: 1, step: 0.01 }}
+                onChange={(e) => setForm((prev) => ({ ...prev, gamma: e.target.value }))}
+              />
+              <TextField
+                size="small"
+                label="Epsilon"
+                type="number"
+                value={form.epsilon}
+                inputProps={{ min: 0, max: 1, step: 0.01 }}
+                onChange={(e) => setForm((prev) => ({ ...prev, epsilon: e.target.value }))}
+              />
+              <TextField
+                size="small"
+                label="Max Steps"
+                type="number"
+                value={form.max_steps}
+                inputProps={{ min: 10, max: 2000 }}
+                onChange={(e) => setForm((prev) => ({ ...prev, max_steps: e.target.value }))}
+              />
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
 
-          <p className="designer-meta">
-            Size: {mazeDesign.size}x{mazeDesign.size} | Start: [{mazeDesign.start[0]}, {mazeDesign.start[1]}] |
-            Goal: [{mazeDesign.goal[0]}, {mazeDesign.goal[1]}] | Walls: {wallCount}
-          </p>
-        </section>
-
-        <form className="form-grid" onSubmit={onRunSimulation}>
-          <label>
-            Model
-            <select
-              value={form.model_id}
-              onChange={(e) => setForm((prev) => ({ ...prev, model_id: e.target.value }))}
-            >
-              {models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Episodes
-            <input
-              type="number"
-              min="1"
-              max="10000"
-              value={form.episodes}
-              onChange={(e) => setForm((prev) => ({ ...prev, episodes: e.target.value }))}
-            />
-          </label>
-
-          <label>
-            Alpha
-            <input
-              type="number"
-              step="0.01"
-              min="0.01"
-              max="1"
-              value={form.alpha}
-              onChange={(e) => setForm((prev) => ({ ...prev, alpha: e.target.value }))}
-            />
-          </label>
-
-          <label>
-            Gamma
-            <input
-              type="number"
-              step="0.01"
-              min="0.01"
-              max="1"
-              value={form.gamma}
-              onChange={(e) => setForm((prev) => ({ ...prev, gamma: e.target.value }))}
-            />
-          </label>
-
-          <label>
-            Epsilon
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="1"
-              value={form.epsilon}
-              onChange={(e) => setForm((prev) => ({ ...prev, epsilon: e.target.value }))}
-            />
-          </label>
-
-          <label>
-            Max Steps
-            <input
-              type="number"
-              min="10"
-              max="2000"
-              value={form.max_steps}
-              onChange={(e) => setForm((prev) => ({ ...prev, max_steps: e.target.value }))}
-            />
-          </label>
-
-          <button type="submit" disabled={!canRun}>
+        <Stack spacing={1.2} sx={{ mt: 2 }}>
+          <Button variant="contained" onClick={onRunSimulation} disabled={!canRun}>
             {loading ? "Training..." : "Run Simulation"}
-          </button>
-        </form>
+          </Button>
 
-        {error ? <div className="error-box">{error}</div> : null}
+          {loading ? (
+            <Alert icon={<CircularProgress size={16} />} severity="info">
+              training in the background
+            </Alert>
+          ) : null}
 
-        {simResult ? (
-          <div className="stats">
-            <h2>Results</h2>
-            <p>Algorithm: {simResult.metrics.algorithm}</p>
-            <p>Solved: {simResult.solved ? "Yes" : "No"}</p>
-            <p>Path Length: {simResult.path.length}</p>
-            <p>Mean Reward: {simResult.metrics.mean_reward}</p>
-            <p>Success Rate: {simResult.metrics.success_rate}</p>
-            <button
-              type="button"
-              onClick={() => {
-                setCurrentStep(0);
-                setIsAnimating(true);
-              }}
-              disabled={!simResult.path?.length}
-            >
-              Replay Path
-            </button>
-          </div>
-        ) : null}
-      </section>
+          {error ? <Alert severity="error">{error}</Alert> : null}
+        </Stack>
+      </Paper>
 
-      <section className="maze-wrap">
-        <MazeGrid
-          maze={displayMaze}
-          start={displayStart}
-          goal={displayGoal}
-          path={displayPath}
-          currentStep={currentStep}
-          onCellClick={handleCellClick}
-        />
-      </section>
-    </main>
+      <Stack spacing={2}>
+        <Accordion expanded={expandedPanels.result} onChange={handlePanelToggle("result")}> 
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                Results
+              </Typography>
+              <Chip
+                label={simResult ? `${simResult.metrics.algorithm} | ${simResult.solved ? "Solved" : "Not Solved"}` : "No run yet"}
+                size="small"
+              />
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails>
+            {simResult ? (
+              <Stack spacing={0.7}>
+                <Typography variant="body2">Algorithm: {simResult.metrics.algorithm}</Typography>
+                <Typography variant="body2">Solved: {simResult.solved ? "Yes" : "No"}</Typography>
+                <Typography variant="body2">Path Length: {simResult.path.length}</Typography>
+                <Typography variant="body2">Mean Reward: {simResult.metrics.mean_reward}</Typography>
+                <Typography variant="body2">Success Rate: {simResult.metrics.success_rate}</Typography>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    setCurrentStep(0);
+                    setIsAnimating(true);
+                  }}
+                  disabled={!simResult.path?.length}
+                >
+                  Replay Path
+                </Button>
+              </Stack>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                No model has been run yet. Configure maze and model settings, then click "Run Simulation".
+              </Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        <Paper sx={{ p: 2, borderRadius: 3 }} elevation={4}>
+          <MazeGrid
+            maze={displayMaze}
+            start={displayStart}
+            goal={displayGoal}
+            path={displayPath}
+            currentStep={currentStep}
+            onCellClick={handleCellClick}
+          />
+        </Paper>
+      </Stack>
+    </Box>
   );
 }
