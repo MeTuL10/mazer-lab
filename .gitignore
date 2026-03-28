@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+node_modules/
+dist/
+.DS_Store
+package-lock.json
+.env
+todo
