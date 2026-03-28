@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .rl.maze_env import DEFAULT_MAZE, MazeEnv
 from .rl.registry import list_models, make_model
 from .schemas import SimulateRequest, SimulateResponse, SimulationMetrics
+
+logger = logging.getLogger("rl_simulator.api")
 
 app = FastAPI(title="RL Maze Simulator API", version="1.0.0")
 
@@ -45,8 +49,28 @@ def simulate(request: SimulateRequest) -> SimulateResponse:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
+    model_name = getattr(model, "label", request.model_id)
+    logger.info("Training started | model=%s | episodes=%d", model_name, request.episodes)
+
+    def progress_logger(completed: int, total: int) -> None:
+        logger.info(
+            "Training progress | model=%s | episodes_completed=%d/%d",
+            model_name,
+            completed,
+            total,
+        )
+
+    model.set_progress_callback(progress_logger)
+
     training_result = model.train()
     path, solved = model.greedy_path(request.max_steps)
+
+    logger.info(
+        "Training completed | model=%s | solved=%s | path_length=%d",
+        model_name,
+        solved,
+        len(path),
+    )
 
     return SimulateResponse(
         maze=env.export_layout(),

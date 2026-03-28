@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any, Dict, List
 
@@ -12,7 +12,7 @@ class QLearningModel(BaseRLModel):
     def train(self) -> Dict[str, Any]:
         episode_rewards: List[float] = []
 
-        for _ in range(self.episodes):
+        for episode_index in range(1, self.episodes + 1):
             state, _ = self.env.reset()
             total_reward = 0.0
 
@@ -32,6 +32,7 @@ class QLearningModel(BaseRLModel):
                     break
 
             episode_rewards.append(total_reward)
+            self._report_progress(episode_index)
 
         return {
             "algorithm": self.label,

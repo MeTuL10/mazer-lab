@@ -1,11 +1,13 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
 
 from .maze_env import MazeEnv
+
+ProgressCallback = Callable[[int, int], None]
 
 
 class BaseRLModel(ABC):
@@ -27,6 +29,27 @@ class BaseRLModel(ABC):
         self.n_states = env.observation_space.n
         self.n_actions = env.action_space.n
         self.q_table = np.zeros((self.n_states, self.n_actions), dtype=np.float32)
+
+        self._progress_callback: ProgressCallback | None = None
+        self._last_progress_episode = 0
+        self._progress_interval = max(1, self.episodes // 100)
+
+    def set_progress_callback(self, callback: ProgressCallback | None) -> None:
+        self._progress_callback = callback
+
+    def _report_progress(self, completed_episodes: int) -> None:
+        should_log = (
+            completed_episodes % self._progress_interval == 0
+            or completed_episodes == self.episodes
+        )
+        if not should_log:
+            return
+        if completed_episodes == self._last_progress_episode:
+            return
+
+        self._last_progress_episode = completed_episodes
+        if self._progress_callback:
+            self._progress_callback(completed_episodes, self.episodes)
 
     def epsilon_greedy_action(self, state: int) -> int:
         if np.random.random() < self.epsilon:

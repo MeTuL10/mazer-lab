@@ -12,3 +12,4 @@ dist/
 package-lock.json
 .env
 todo
+.vite/

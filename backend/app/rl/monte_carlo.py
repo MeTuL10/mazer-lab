@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple
@@ -15,7 +15,7 @@ class MonteCarloModel(BaseRLModel):
         returns_count = defaultdict(float)
         episode_rewards: List[float] = []
 
-        for _ in range(self.episodes):
+        for episode_index in range(1, self.episodes + 1):
             episode: List[Tuple[int, int, float]] = []
             state, _ = self.env.reset()
             total_reward = 0.0
@@ -43,6 +43,7 @@ class MonteCarloModel(BaseRLModel):
                 self.q_table[state, action] = returns_sum[key] / returns_count[key]
 
             episode_rewards.append(total_reward)
+            self._report_progress(episode_index)
 
         return {
             "algorithm": self.label,

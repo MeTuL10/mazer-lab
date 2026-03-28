@@ -1,10 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
-import MazeGrid from "./components/MazeGrid";
+import {
+  Box,
+  Paper,
+  Slider,
+  Stack,
+  Typography,
+} from "@mui/material";
+
 import { fetchModels, runSimulation } from "./api";
+import AppTitle from "./components/AppTitle";
+import MazeDesignPanel from "./components/MazeDesignPanel";
+import MazeGrid from "./components/MazeGrid";
+import ModelParametersPanel from "./components/ModelParametersPanel";
+import SimulationResultsPanel from "./components/SimulationResultsPanel";
 
 const DEFAULT_GRID_SIZE = 8;
 const MIN_GRID_SIZE = 4;
 const MAX_GRID_SIZE = 30;
+const DEFAULT_GRID_PIXEL_SIZE = 760;
 
 const DEFAULT_FORM = {
   model_id: "",
@@ -63,7 +76,14 @@ export default function App() {
   const [gridSizeInput, setGridSizeInput] = useState(DEFAULT_GRID_SIZE);
   const [wallCountInput, setWallCountInput] = useState(10);
   const [tileTool, setTileTool] = useState("wall");
+  const [gridPixelSize, setGridPixelSize] = useState(DEFAULT_GRID_PIXEL_SIZE);
   const [mazeDesign, setMazeDesign] = useState(createMazeDesign(DEFAULT_GRID_SIZE));
+
+  const [expandedPanels, setExpandedPanels] = useState({
+    maze: true,
+    model: true,
+    result: true,
+  });
 
   useEffect(() => {
     async function loadModels() {
@@ -106,8 +126,18 @@ export default function App() {
   const maxRandomWalls = mazeDesign.size * mazeDesign.size - 2;
 
   const canRun = useMemo(() => {
-    return form.model_id && !loading;
+    return Boolean(form.model_id) && !loading;
   }, [form.model_id, loading]);
+
+  const selectedModel = useMemo(() => {
+    return models.find((item) => item.id === form.model_id)?.name || "No model selected";
+  }, [models, form.model_id]);
+
+  function handlePanelToggle(panel) {
+    return (_event, isExpanded) => {
+      setExpandedPanels((prev) => ({ ...prev, [panel]: isExpanded }));
+    };
+  }
 
   function resetSimulationView() {
     setSimResult(null);
@@ -120,8 +150,7 @@ export default function App() {
     setMazeDesign((prev) => mutator(prev));
   }
 
-  function handleCreateGrid(event) {
-    event.preventDefault();
+  function handleCreateGrid() {
     setError("");
     const size = clamp(
       Math.floor(parseNumericInput(gridSizeInput, DEFAULT_GRID_SIZE)),
@@ -170,12 +199,10 @@ export default function App() {
 
       if (tileTool === "erase") {
         wallSet.delete(key);
+      } else if (wallSet.has(key)) {
+        wallSet.delete(key);
       } else {
-        if (wallSet.has(key)) {
-          wallSet.delete(key);
-        } else {
-          wallSet.add(key);
-        }
+        wallSet.add(key);
       }
 
       return {
@@ -227,8 +254,7 @@ export default function App() {
     });
   }
 
-  async function onRunSimulation(event) {
-    event.preventDefault();
+  async function onRunSimulation() {
     setError("");
     setLoading(true);
     setIsAnimating(false);
@@ -252,6 +278,7 @@ export default function App() {
       setSimResult(result);
       setCurrentStep(0);
       setIsAnimating(true);
+      setExpandedPanels((prev) => ({ ...prev, result: true }));
     } catch (err) {
       setError(err.message || "Simulation failed.");
     } finally {
@@ -265,183 +292,107 @@ export default function App() {
   const displayPath = simResult?.path || [];
 
   return (
-    <main className="page">
-      <section className="panel">
-        <h1>RL Maze Simulator</h1>
-        <p>Design a maze, choose an RL model, and watch it learn the path.</p>
+    <Box
+      className="app-shell"
+      sx={{
+        minHeight: "100vh",
+        px: { xs: 1.5, md: 2.5 },
+        py: 2.5,
+      }}
+    >
+      <AppTitle />
 
-        <section className="designer-card">
-          <h2>Maze Designer</h2>
-          <form className="designer-grid-size" onSubmit={handleCreateGrid}>
-            <label>
-              Grid Size (n x n)
-              <input
-                type="number"
-                min={MIN_GRID_SIZE}
-                max={MAX_GRID_SIZE}
-                value={gridSizeInput}
-                onChange={(e) => setGridSizeInput(e.target.value)}
+      <Box
+        sx={{
+          mt: 1.5,
+          display: "grid",
+          gap: 2,
+          gridTemplateColumns: { xs: "1fr", md: "minmax(340px, 430px) 1fr" },
+          alignItems: "start",
+        }}
+      >
+        <Paper className="control-panel" sx={{ p: 2, borderRadius: 3 }} elevation={4}>
+          <MazeDesignPanel
+            expanded={expandedPanels.maze}
+            onToggle={handlePanelToggle("maze")}
+            mazeDesign={mazeDesign}
+            wallCount={wallCount}
+            gridSizeInput={gridSizeInput}
+            setGridSizeInput={setGridSizeInput}
+            onCreateGrid={handleCreateGrid}
+            tileTool={tileTool}
+            setTileTool={setTileTool}
+            wallCountInput={wallCountInput}
+            setWallCountInput={setWallCountInput}
+            maxRandomWalls={maxRandomWalls}
+            onRandomWalls={handleRandomWalls}
+            onClearWalls={handleClearWalls}
+          />
+
+          <ModelParametersPanel
+            expanded={expandedPanels.model}
+            onToggle={handlePanelToggle("model")}
+            selectedModel={selectedModel}
+            models={models}
+            form={form}
+            setForm={setForm}
+          />
+        </Paper>
+
+        <Stack spacing={2}>
+          <SimulationResultsPanel
+            expanded={expandedPanels.result}
+            onToggle={handlePanelToggle("result")}
+            simResult={simResult}
+            canRun={canRun}
+            loading={loading}
+            error={error}
+            onRunSimulation={onRunSimulation}
+            onReplayPath={() => {
+              setCurrentStep(0);
+              setIsAnimating(true);
+            }}
+          />
+
+          <Paper className="maze-panel" sx={{ p: 2, borderRadius: 3 }} elevation={4}>
+            <Stack spacing={1.6}>
+              <Stack spacing={1}>
+                <Typography variant="h6" sx={{ fontWeight: 700, textAlign: "center" }}>
+                  Maze View
+                </Typography>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1.2}
+                  alignItems={{ xs: "stretch", sm: "center" }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 122, textAlign: "left" }}>
+                    Grid Size in View
+                  </Typography>
+                  <Slider
+                    min={320}
+                    max={1100}
+                    step={10}
+                    value={gridPixelSize}
+                    onChange={(_event, value) => setGridPixelSize(value)}
+                    valueLabelDisplay="auto"
+                    sx={{ width: { xs: "100%", sm: 340 }, mx: { xs: 0, sm: "auto" } }}
+                  />
+                </Stack>
+              </Stack>
+
+              <MazeGrid
+                maze={displayMaze}
+                start={displayStart}
+                goal={displayGoal}
+                path={displayPath}
+                currentStep={currentStep}
+                onCellClick={handleCellClick}
+                pixelSize={gridPixelSize}
               />
-            </label>
-            <button type="submit">Create Grid</button>
-          </form>
-
-          <div className="tool-row">
-            <span className="tool-label">Tile Tool</span>
-            {[
-              ["start", "Place Start"],
-              ["goal", "Place Goal"],
-              ["wall", "Toggle Wall"],
-              ["erase", "Erase Wall"],
-            ].map(([id, label]) => (
-              <button
-                type="button"
-                key={id}
-                className={`tool-btn ${tileTool === id ? "active" : ""}`}
-                onClick={() => setTileTool(id)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div className="wall-controls">
-            <label>
-              Random Walls (m)
-              <input
-                type="number"
-                min="0"
-                max={maxRandomWalls}
-                value={wallCountInput}
-                onChange={(e) => setWallCountInput(e.target.value)}
-              />
-            </label>
-            <button type="button" onClick={handleRandomWalls}>
-              Generate Random Walls
-            </button>
-            <button type="button" onClick={handleClearWalls}>
-              Clear Walls
-            </button>
-          </div>
-
-          <p className="designer-meta">
-            Size: {mazeDesign.size}x{mazeDesign.size} | Start: [{mazeDesign.start[0]}, {mazeDesign.start[1]}] |
-            Goal: [{mazeDesign.goal[0]}, {mazeDesign.goal[1]}] | Walls: {wallCount}
-          </p>
-        </section>
-
-        <form className="form-grid" onSubmit={onRunSimulation}>
-          <label>
-            Model
-            <select
-              value={form.model_id}
-              onChange={(e) => setForm((prev) => ({ ...prev, model_id: e.target.value }))}
-            >
-              {models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            Episodes
-            <input
-              type="number"
-              min="1"
-              max="10000"
-              value={form.episodes}
-              onChange={(e) => setForm((prev) => ({ ...prev, episodes: e.target.value }))}
-            />
-          </label>
-
-          <label>
-            Alpha
-            <input
-              type="number"
-              step="0.01"
-              min="0.01"
-              max="1"
-              value={form.alpha}
-              onChange={(e) => setForm((prev) => ({ ...prev, alpha: e.target.value }))}
-            />
-          </label>
-
-          <label>
-            Gamma
-            <input
-              type="number"
-              step="0.01"
-              min="0.01"
-              max="1"
-              value={form.gamma}
-              onChange={(e) => setForm((prev) => ({ ...prev, gamma: e.target.value }))}
-            />
-          </label>
-
-          <label>
-            Epsilon
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="1"
-              value={form.epsilon}
-              onChange={(e) => setForm((prev) => ({ ...prev, epsilon: e.target.value }))}
-            />
-          </label>
-
-          <label>
-            Max Steps
-            <input
-              type="number"
-              min="10"
-              max="2000"
-              value={form.max_steps}
-              onChange={(e) => setForm((prev) => ({ ...prev, max_steps: e.target.value }))}
-            />
-          </label>
-
-          <button type="submit" disabled={!canRun}>
-            {loading ? "Training..." : "Run Simulation"}
-          </button>
-        </form>
-
-        {error ? <div className="error-box">{error}</div> : null}
-
-        {simResult ? (
-          <div className="stats">
-            <h2>Results</h2>
-            <p>Algorithm: {simResult.metrics.algorithm}</p>
-            <p>Solved: {simResult.solved ? "Yes" : "No"}</p>
-            <p>Path Length: {simResult.path.length}</p>
-            <p>Mean Reward: {simResult.metrics.mean_reward}</p>
-            <p>Success Rate: {simResult.metrics.success_rate}</p>
-            <button
-              type="button"
-              onClick={() => {
-                setCurrentStep(0);
-                setIsAnimating(true);
-              }}
-              disabled={!simResult.path?.length}
-            >
-              Replay Path
-            </button>
-          </div>
-        ) : null}
-      </section>
-
-      <section className="maze-wrap">
-        <MazeGrid
-          maze={displayMaze}
-          start={displayStart}
-          goal={displayGoal}
-          path={displayPath}
-          currentStep={currentStep}
-          onCellClick={handleCellClick}
-        />
-      </section>
-    </main>
+            </Stack>
+          </Paper>
+        </Stack>
+      </Box>
+    </Box>
   );
 }
