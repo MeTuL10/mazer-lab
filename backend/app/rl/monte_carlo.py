@@ -19,12 +19,14 @@ class MonteCarloModel(BaseRLModel):
             episode: List[Tuple[int, int, float]] = []
             state, _ = self.env.reset()
             total_reward = 0.0
+            episode_path = [list(self.env.state_to_coord(state))]
 
             for _ in range(self.env.max_episode_steps):
                 action = self.epsilon_greedy_action(state)
                 next_state, reward, done, truncated, _ = self.env.step(action)
                 episode.append((state, action, reward))
                 state = next_state
+                episode_path.append(list(self.env.state_to_coord(state)))
                 total_reward += reward
 
                 if done or truncated:
@@ -43,7 +45,7 @@ class MonteCarloModel(BaseRLModel):
                 self.q_table[state, action] = returns_sum[key] / returns_count[key]
 
             episode_rewards.append(total_reward)
-            self._report_progress(episode_index)
+            self._report_progress(episode_index, episode_path)
 
         return {
             "algorithm": self.label,

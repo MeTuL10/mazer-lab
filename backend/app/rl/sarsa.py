@@ -16,6 +16,7 @@ class SARSAModel(BaseRLModel):
             state, _ = self.env.reset()
             action = self.epsilon_greedy_action(state)
             total_reward = 0.0
+            episode_path = [list(self.env.state_to_coord(state))]
 
             for _ in range(self.env.max_episode_steps):
                 next_state, reward, done, truncated, _ = self.env.step(action)
@@ -26,13 +27,14 @@ class SARSAModel(BaseRLModel):
                 self.q_table[state, action] += self.alpha * td_error
 
                 state, action = next_state, next_action
+                episode_path.append(list(self.env.state_to_coord(state)))
                 total_reward += reward
 
                 if done or truncated:
                     break
 
             episode_rewards.append(total_reward)
-            self._report_progress(episode_index)
+            self._report_progress(episode_index, episode_path)
 
         return {
             "algorithm": self.label,

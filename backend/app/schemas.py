@@ -66,7 +66,7 @@ class MazeInput(BaseModel):
 
 class SimulateRequest(BaseModel):
     model_id: str = Field(default="q_learning")
-    episodes: int = Field(default=800, ge=1, le=10000)
+    episodes: int = Field(default=800, ge=1)
     alpha: float = Field(default=0.1, gt=0.0, le=1.0)
     gamma: float = Field(default=0.95, gt=0.0, le=1.0)
     epsilon: float = Field(default=0.15, ge=0.0, le=1.0)
