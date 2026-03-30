@@ -15,6 +15,7 @@ class QLearningModel(BaseRLModel):
         for episode_index in range(1, self.episodes + 1):
             state, _ = self.env.reset()
             total_reward = 0.0
+            episode_path = [list(self.env.state_to_coord(state))]
 
             for _ in range(self.env.max_episode_steps):
                 action = self.epsilon_greedy_action(state)
@@ -26,13 +27,14 @@ class QLearningModel(BaseRLModel):
                 self.q_table[state, action] += self.alpha * td_error
 
                 state = next_state
+                episode_path.append(list(self.env.state_to_coord(state)))
                 total_reward += reward
 
                 if done or truncated:
                     break
 
             episode_rewards.append(total_reward)
-            self._report_progress(episode_index)
+            self._report_progress(episode_index, episode_path)
 
         return {
             "algorithm": self.label,

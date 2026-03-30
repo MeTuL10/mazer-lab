@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Paper,
@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { fetchModels, runSimulation } from "./api";
+import { fetchModels, runSimulation, runSimulationStream } from "./api";
 import AppTitle from "./components/AppTitle";
 import MazeDesignPanel from "./components/MazeDesignPanel";
 import MazeGrid from "./components/MazeGrid";
@@ -26,6 +26,13 @@ const DEFAULT_FORM = {
   gamma: 0.95,
   epsilon: 0.15,
   max_steps: 200,
+};
+
+const DEFAULT_TRAINING_VIEW = {
+  completed: 0,
+  total: 0,
+  path: [],
+  buffered: 0,
 };
 
 function parseNumericInput(value, fallback) {
@@ -79,6 +86,10 @@ export default function App() {
   const [gridPixelSize, setGridPixelSize] = useState(DEFAULT_GRID_PIXEL_SIZE);
   const [mazeDesign, setMazeDesign] = useState(createMazeDesign(DEFAULT_GRID_SIZE));
 
+  const [showTraining, setShowTraining] = useState(false);
+  const [trainingView, setTrainingView] = useState(DEFAULT_TRAINING_VIEW);
+  const streamQueueRef = useRef([]);
+
   const [expandedPanels, setExpandedPanels] = useState({
     maze: true,
     model: true,
@@ -120,6 +131,28 @@ export default function App() {
     return () => clearInterval(timer);
   }, [isAnimating, simResult]);
 
+  useEffect(() => {
+    if (!showTraining) {
+      return undefined;
+    }
+
+    const timer = setInterval(() => {
+      const next = streamQueueRef.current.shift();
+      if (!next) {
+        return;
+      }
+
+      setTrainingView({
+        completed: next.completed,
+        total: next.total,
+        path: next.path || [],
+        buffered: streamQueueRef.current.length,
+      });
+    }, 85);
+
+    return () => clearInterval(timer);
+  }, [showTraining]);
+
   const designedMaze = useMemo(() => buildMazeGrid(mazeDesign), [mazeDesign]);
 
   const wallCount = mazeDesign.walls.length;
@@ -139,10 +172,16 @@ export default function App() {
     };
   }
 
+  function resetTrainingView() {
+    streamQueueRef.current = [];
+    setTrainingView(DEFAULT_TRAINING_VIEW);
+  }
+
   function resetSimulationView() {
     setSimResult(null);
     setCurrentStep(0);
     setIsAnimating(false);
+    resetTrainingView();
   }
 
   function updateDesign(mutator) {
@@ -258,6 +297,9 @@ export default function App() {
     setError("");
     setLoading(true);
     setIsAnimating(false);
+    setSimResult(null);
+    setCurrentStep(0);
+    resetTrainingView();
 
     try {
       const payload = {
@@ -274,7 +316,26 @@ export default function App() {
           walls: mazeDesign.walls,
         },
       };
-      const result = await runSimulation(payload);
+
+      const result = showTraining
+        ? await runSimulationStream(payload, {
+            onStarted: (event) => {
+              setTrainingView((prev) => ({
+                ...prev,
+                total: event.episodes || payload.episodes,
+              }));
+            },
+            onProgress: (event) => {
+              streamQueueRef.current.push(event);
+              setTrainingView((prev) => ({
+                ...prev,
+                total: event.total || prev.total,
+                buffered: streamQueueRef.current.length,
+              }));
+            },
+          })
+        : await runSimulation(payload);
+
       setSimResult(result);
       setCurrentStep(0);
       setIsAnimating(true);
@@ -289,7 +350,14 @@ export default function App() {
   const displayMaze = simResult?.maze || designedMaze;
   const displayStart = simResult?.start || mazeDesign.start;
   const displayGoal = simResult?.goal || mazeDesign.goal;
-  const displayPath = simResult?.path || [];
+  const hasLiveFrames = showTraining
+    && trainingView.path.length > 0
+    && (loading || trainingView.buffered > 0);
+  const livePath = hasLiveFrames ? trainingView.path : [];
+  const displayPath = livePath.length > 0 ? livePath : simResult?.path || [];
+  const displayCurrentStep = hasLiveFrames
+    ? Math.max(0, displayPath.length - 1)
+    : currentStep;
 
   return (
     <Box
@@ -347,6 +415,9 @@ export default function App() {
             canRun={canRun}
             loading={loading}
             error={error}
+            showTraining={showTraining}
+            onShowTrainingChange={setShowTraining}
+            trainingProgress={showTraining ? trainingView : null}
             onRunSimulation={onRunSimulation}
             onReplayPath={() => {
               setCurrentStep(0);
@@ -385,7 +456,7 @@ export default function App() {
                 start={displayStart}
                 goal={displayGoal}
                 path={displayPath}
-                currentStep={currentStep}
+                currentStep={displayCurrentStep}
                 onCellClick={handleCellClick}
                 pixelSize={gridPixelSize}
               />

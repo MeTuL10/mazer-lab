@@ -7,7 +7,8 @@ import numpy as np
 
 from .maze_env import MazeEnv
 
-ProgressCallback = Callable[[int, int], None]
+EpisodePath = List[List[int]]
+ProgressCallback = Callable[[int, int, EpisodePath], None]
 
 
 class BaseRLModel(ABC):
@@ -37,7 +38,7 @@ class BaseRLModel(ABC):
     def set_progress_callback(self, callback: ProgressCallback | None) -> None:
         self._progress_callback = callback
 
-    def _report_progress(self, completed_episodes: int) -> None:
+    def _report_progress(self, completed_episodes: int, episode_path: EpisodePath | None = None) -> None:
         should_log = (
             completed_episodes % self._progress_interval == 0
             or completed_episodes == self.episodes
@@ -49,7 +50,7 @@ class BaseRLModel(ABC):
 
         self._last_progress_episode = completed_episodes
         if self._progress_callback:
-            self._progress_callback(completed_episodes, self.episodes)
+            self._progress_callback(completed_episodes, self.episodes, episode_path or [])
 
     def epsilon_greedy_action(self, state: int) -> int:
         if np.random.random() < self.epsilon:

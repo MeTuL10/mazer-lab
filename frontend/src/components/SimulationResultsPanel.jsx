@@ -7,10 +7,16 @@ import {
   Button,
   Chip,
   CircularProgress,
+  FormControlLabel,
+  IconButton,
+  LinearProgress,
   Stack,
+  Switch,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 function formatMetric(value) {
   if (typeof value === "number") {
@@ -26,6 +32,9 @@ export default function SimulationResultsPanel({
   canRun,
   loading,
   error,
+  showTraining,
+  onShowTrainingChange,
+  trainingProgress,
   onRunSimulation,
   onReplayPath,
 }) {
@@ -38,6 +47,12 @@ export default function SimulationResultsPanel({
         { label: "Success Rate", value: simResult.metrics.success_rate },
       ]
     : [];
+
+  const progressTotal = trainingProgress?.total || 0;
+  const progressCompleted = trainingProgress?.completed || 0;
+  const progressPercent = progressTotal > 0
+    ? Math.min(100, (progressCompleted / progressTotal) * 100)
+    : 0;
 
   return (
     <Accordion expanded={expanded} onChange={onToggle}>
@@ -54,6 +69,30 @@ export default function SimulationResultsPanel({
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1.2}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+            <FormControlLabel
+              control={(
+                <Switch
+                  size="small"
+                  checked={showTraining}
+                  disabled={loading}
+                  onChange={(event) => onShowTrainingChange(event.target.checked)}
+                />
+              )}
+              label="Show Training Live"
+              sx={{ m: 0 }}
+            />
+            <Tooltip
+              title="Live training rendering is useful for visibility, but it can slow simulation speed because the UI has to keep repainting each streamed step."
+              arrow
+              placement="top"
+            >
+              <IconButton size="small" sx={{ p: 0.35 }}>
+                <HelpOutlineIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+
           <Button variant="contained" onClick={onRunSimulation} disabled={!canRun}>
             {loading ? "Training in progress" : "Run Simulation"}
           </Button>
@@ -62,6 +101,23 @@ export default function SimulationResultsPanel({
             <Alert icon={<CircularProgress size={16} />} severity="info">
               training in the background
             </Alert>
+          ) : null}
+
+          {loading && showTraining ? (
+            <Stack spacing={0.6}>
+              <Typography variant="caption" color="text.secondary">
+                {progressTotal > 0
+                  ? `Streaming episodes: ${progressCompleted}/${progressTotal}`
+                  : "Preparing training stream..."}
+                {trainingProgress?.buffered > 0
+                  ? ` | buffered: ${trainingProgress.buffered}`
+                  : ""}
+              </Typography>
+              <LinearProgress
+                variant={progressTotal > 0 ? "determinate" : "indeterminate"}
+                value={progressPercent}
+              />
+            </Stack>
           ) : null}
 
           {error ? <Alert severity="error">{error}</Alert> : null}

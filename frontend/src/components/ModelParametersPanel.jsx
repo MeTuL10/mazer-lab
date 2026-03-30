@@ -76,7 +76,7 @@ export default function ModelParametersPanel({
             size="small"
             type="number"
             value={form.episodes}
-            inputProps={{ min: 1, max: 10000 }}
+            inputProps={{ min: 1 }}
             onChange={(e) => setForm((prev) => ({ ...prev, episodes: e.target.value }))}
           />
 
