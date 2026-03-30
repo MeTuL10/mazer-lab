@@ -1,4 +1,4 @@
-﻿import {
+import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
@@ -13,14 +13,7 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
-const PARAMETER_HINTS = {
-  model: "Choose which RL strategy learns the maze policy.",
-  episodes: "Number of training runs through the maze. More episodes usually improve learning.",
-  alpha: "Learning rate. Higher alpha updates Q-values faster from new experience.",
-  gamma: "Discount factor. Higher gamma makes the agent value long-term rewards more.",
-  epsilon: "Exploration rate. Higher epsilon makes the agent try random actions more often.",
-  max_steps: "Maximum steps per episode before truncation.",
-};
+import { MODEL_PARAMETER_HINTS } from "../constants";
 
 function FieldHint({ label, hint }) {
   return (
@@ -57,7 +50,7 @@ export default function ModelParametersPanel({
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1.2}>
-          <FieldHint label="Model" hint={PARAMETER_HINTS.model} />
+          <FieldHint label="Model" hint={MODEL_PARAMETER_HINTS.model} />
           <TextField
             select
             size="small"
@@ -71,7 +64,7 @@ export default function ModelParametersPanel({
             ))}
           </TextField>
 
-          <FieldHint label="Episodes" hint={PARAMETER_HINTS.episodes} />
+          <FieldHint label="Episodes" hint={MODEL_PARAMETER_HINTS.episodes} />
           <TextField
             size="small"
             type="number"
@@ -80,7 +73,7 @@ export default function ModelParametersPanel({
             onChange={(e) => setForm((prev) => ({ ...prev, episodes: e.target.value }))}
           />
 
-          <FieldHint label="Alpha" hint={PARAMETER_HINTS.alpha} />
+          <FieldHint label="Alpha" hint={MODEL_PARAMETER_HINTS.alpha} />
           <TextField
             size="small"
             type="number"
@@ -89,7 +82,7 @@ export default function ModelParametersPanel({
             onChange={(e) => setForm((prev) => ({ ...prev, alpha: e.target.value }))}
           />
 
-          <FieldHint label="Gamma" hint={PARAMETER_HINTS.gamma} />
+          <FieldHint label="Gamma" hint={MODEL_PARAMETER_HINTS.gamma} />
           <TextField
             size="small"
             type="number"
@@ -98,7 +91,7 @@ export default function ModelParametersPanel({
             onChange={(e) => setForm((prev) => ({ ...prev, gamma: e.target.value }))}
           />
 
-          <FieldHint label="Epsilon" hint={PARAMETER_HINTS.epsilon} />
+          <FieldHint label="Epsilon" hint={MODEL_PARAMETER_HINTS.epsilon} />
           <TextField
             size="small"
             type="number"
@@ -107,7 +100,7 @@ export default function ModelParametersPanel({
             onChange={(e) => setForm((prev) => ({ ...prev, epsilon: e.target.value }))}
           />
 
-          <FieldHint label="Max Steps" hint={PARAMETER_HINTS.max_steps} />
+          <FieldHint label="Max Steps" hint={MODEL_PARAMETER_HINTS.max_steps} />
           <TextField
             size="small"
             type="number"

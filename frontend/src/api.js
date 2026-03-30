@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+import { API_DEFAULT_BASE_URL } from "./constants";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_DEFAULT_BASE_URL;
 
 function toWebSocketBaseUrl(httpBaseUrl) {
   if (httpBaseUrl.startsWith("https://")) {

@@ -37,6 +37,7 @@ export default function SimulationResultsPanel({
   trainingProgress,
   onRunSimulation,
   onReplayPath,
+  showRunButton = true,
 }) {
   const metricCards = simResult
     ? [
@@ -93,9 +94,11 @@ export default function SimulationResultsPanel({
             </Tooltip>
           </Stack>
 
-          <Button variant="contained" onClick={onRunSimulation} disabled={!canRun}>
-            {loading ? "Training in progress" : "Run Simulation"}
-          </Button>
+          {showRunButton ? (
+            <Button variant="contained" onClick={onRunSimulation} disabled={!canRun}>
+              {loading ? "Training in progress" : "Run Simulation"}
+            </Button>
+          ) : null}
 
           {loading ? (
             <Alert icon={<CircularProgress size={16} />} severity="info">
@@ -124,11 +127,6 @@ export default function SimulationResultsPanel({
 
           {simResult ? (
             <>
-              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                <Chip label={`Algo: ${simResult.metrics.algorithm}`} size="small" />
-                <Chip label={`Path: ${simResult.path.length}`} size="small" />
-                <Chip label={`Success: ${formatMetric(simResult.metrics.success_rate)}`} size="small" />
-              </Stack>
 
               <Box
                 sx={{
@@ -168,3 +166,4 @@ export default function SimulationResultsPanel({
     </Accordion>
   );
 }
+

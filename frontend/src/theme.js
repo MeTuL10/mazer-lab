@@ -1,4 +1,4 @@
-﻿import { createTheme } from "@mui/material/styles";
+import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
@@ -12,14 +12,14 @@ const theme = createTheme({
       main: "#ff7a59",
     },
     background: {
-      default: "#070506",
-      paper: "#121012",
+      default: "#060507",
+      paper: "#0b0a0d",
     },
     text: {
       primary: "#f7f3f4",
       secondary: "#b9aeb0",
     },
-    divider: "rgba(255, 86, 86, 0.24)",
+    divider: "rgba(255, 86, 86, 0.18)",
   },
   shape: {
     borderRadius: 18,
@@ -36,17 +36,20 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundImage: "linear-gradient(165deg, rgba(30,20,22,0.95), rgba(11,9,10,0.96))",
-          border: "1px solid rgba(255,85,85,0.2)",
-          boxShadow: "0 18px 42px rgba(0,0,0,0.45)",
+          backgroundImage:
+            "radial-gradient(circle at 50% -32%, rgba(255,74,74,0.10) 0%, rgba(255,74,74,0.04) 36%, rgba(0,0,0,0) 60%), linear-gradient(170deg, rgba(11,10,12,0.97), rgba(5,5,7,0.98))",
+          border: "1px solid rgba(255,85,85,0.16)",
+          boxShadow:
+            "0 18px 42px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,88,88,0.06), inset 0 16px 28px rgba(255,72,72,0.04)",
         },
       },
     },
     MuiAccordion: {
       styleOverrides: {
         root: {
-          backgroundColor: "rgba(255,255,255,0.02)",
-          border: "1px solid rgba(255,85,85,0.18)",
+          backgroundImage:
+            "radial-gradient(circle at 50% -45%, rgba(255,72,72,0.10) 0%, rgba(255,72,72,0.03) 42%, rgba(0,0,0,0) 62%), linear-gradient(175deg, rgba(10,10,12,0.94), rgba(7,7,9,0.97))",
+          border: "1px solid rgba(255,85,85,0.15)",
           borderRadius: 14,
           marginBottom: "10px",
           "&:before": {
@@ -59,10 +62,10 @@ const theme = createTheme({
       styleOverrides: {
         contained: {
           background: "linear-gradient(90deg, #ff3a32 0%, #ff5a3d 100%)",
-          boxShadow: "0 8px 22px rgba(255,72,72,0.35)",
+          boxShadow: "0 8px 22px rgba(255,72,72,0.32)",
         },
         outlined: {
-          borderColor: "rgba(255,92,92,0.4)",
+          borderColor: "rgba(255,92,92,0.36)",
           color: "#ffb5b5",
         },
       },
@@ -70,7 +73,7 @@ const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          backgroundColor: "rgba(255,75,75,0.16)",
+          backgroundColor: "rgba(255,75,75,0.14)",
           color: "#ffd9d9",
         },
       },

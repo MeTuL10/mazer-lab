@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
+  Button,
   Paper,
   Slider,
   Stack,
@@ -8,32 +9,22 @@ import {
 } from "@mui/material";
 
 import { fetchModels, runSimulation, runSimulationStream } from "./api";
+import {
+  DEFAULT_FORM,
+  DEFAULT_GRID_PIXEL_SIZE,
+  DEFAULT_GRID_SIZE,
+  DEFAULT_RANDOM_WALLS,
+  DEFAULT_TRAINING_VIEW,
+  MAX_GRID_SIZE,
+  MIN_GRID_SIZE,
+  TRAINING_REPLAY_INTERVAL_MS,
+  TRAINING_STREAM_RENDER_INTERVAL_MS,
+} from "./constants";
 import AppTitle from "./components/AppTitle";
 import MazeDesignPanel from "./components/MazeDesignPanel";
 import MazeGrid from "./components/MazeGrid";
 import ModelParametersPanel from "./components/ModelParametersPanel";
 import SimulationResultsPanel from "./components/SimulationResultsPanel";
-
-const DEFAULT_GRID_SIZE = 8;
-const MIN_GRID_SIZE = 4;
-const MAX_GRID_SIZE = 30;
-const DEFAULT_GRID_PIXEL_SIZE = 760;
-
-const DEFAULT_FORM = {
-  model_id: "",
-  episodes: 800,
-  alpha: 0.1,
-  gamma: 0.95,
-  epsilon: 0.15,
-  max_steps: 200,
-};
-
-const DEFAULT_TRAINING_VIEW = {
-  completed: 0,
-  total: 0,
-  path: [],
-  buffered: 0,
-};
 
 function parseNumericInput(value, fallback) {
   const parsed = Number(value);
@@ -81,7 +72,7 @@ export default function App() {
   const [error, setError] = useState("");
 
   const [gridSizeInput, setGridSizeInput] = useState(DEFAULT_GRID_SIZE);
-  const [wallCountInput, setWallCountInput] = useState(10);
+  const [wallCountInput, setWallCountInput] = useState(DEFAULT_RANDOM_WALLS);
   const [tileTool, setTileTool] = useState("wall");
   const [gridPixelSize, setGridPixelSize] = useState(DEFAULT_GRID_PIXEL_SIZE);
   const [mazeDesign, setMazeDesign] = useState(createMazeDesign(DEFAULT_GRID_SIZE));
@@ -126,7 +117,7 @@ export default function App() {
         }
         return prev + 1;
       });
-    }, 120);
+    }, TRAINING_REPLAY_INTERVAL_MS);
 
     return () => clearInterval(timer);
   }, [isAnimating, simResult]);
@@ -148,7 +139,7 @@ export default function App() {
         path: next.path || [],
         buffered: streamQueueRef.current.length,
       });
-    }, 85);
+    }, TRAINING_STREAM_RENDER_INTERVAL_MS);
 
     return () => clearInterval(timer);
   }, [showTraining]);
@@ -379,7 +370,7 @@ export default function App() {
           alignItems: "start",
         }}
       >
-        <Paper className="control-panel" sx={{ p: 2, borderRadius: 3 }} elevation={4}>
+        <Stack spacing={1.2}>
           <MazeDesignPanel
             expanded={expandedPanels.maze}
             onToggle={handlePanelToggle("maze")}
@@ -405,9 +396,7 @@ export default function App() {
             form={form}
             setForm={setForm}
           />
-        </Paper>
 
-        <Stack spacing={2}>
           <SimulationResultsPanel
             expanded={expandedPanels.result}
             onToggle={handlePanelToggle("result")}
@@ -424,46 +413,72 @@ export default function App() {
               setIsAnimating(true);
             }}
           />
+        </Stack>
 
-          <Paper className="maze-panel" sx={{ p: 2, borderRadius: 3 }} elevation={4}>
-            <Stack spacing={1.6}>
-              <Stack spacing={1}>
-                <Typography variant="h6" sx={{ fontWeight: 700, textAlign: "center" }}>
-                  Maze View
-                </Typography>
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={1.2}
-                  alignItems={{ xs: "stretch", sm: "center" }}
+        <Paper className="maze-panel" sx={{ p: 2, borderRadius: 3 }} elevation={4}>
+          <Stack spacing={1.4}>
+            <Stack spacing={0.8}>
+              <Typography variant="h6" sx={{ fontWeight: 700, textAlign: "center" }}>
+                Maze View
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ alignSelf: "flex-start" }}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={onRunSimulation}
+                  disabled={!canRun}
+                  sx={{ minWidth: 190, px: 3 }}
                 >
-                  <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 122, textAlign: "left" }}>
-                    Grid Size in View
-                  </Typography>
-                  <Slider
-                    min={320}
-                    max={1100}
-                    step={10}
-                    value={gridPixelSize}
-                    onChange={(_event, value) => setGridPixelSize(value)}
-                    valueLabelDisplay="auto"
-                    sx={{ width: { xs: "100%", sm: 340 }, mx: { xs: 0, sm: "auto" } }}
-                  />
-                </Stack>
+                  {loading ? "Training in progress" : "Run Simulation"}
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    setCurrentStep(0);
+                    setIsAnimating(true);
+                  }}
+                  disabled={loading || !simResult?.path?.length}
+                  sx={{ minWidth: 140, px: 2 }}
+                >
+                  Replay Path
+                </Button>
               </Stack>
+            </Stack>
 
-              <MazeGrid
-                maze={displayMaze}
-                start={displayStart}
-                goal={displayGoal}
-                path={displayPath}
-                currentStep={displayCurrentStep}
-                onCellClick={handleCellClick}
-                pixelSize={gridPixelSize}
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1.2}
+              alignItems={{ xs: "stretch", sm: "center" }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 122, textAlign: "left" }}>
+                Grid Size in View
+              </Typography>
+              <Slider
+                min={320}
+                max={1100}
+                step={10}
+                value={gridPixelSize}
+                onChange={(_event, value) => setGridPixelSize(value)}
+                valueLabelDisplay="auto"
+                sx={{ width: { xs: "100%", sm: 340 }, mx: { xs: 0, sm: "auto" } }}
               />
             </Stack>
-          </Paper>
-        </Stack>
+
+            <MazeGrid
+              maze={displayMaze}
+              start={displayStart}
+              goal={displayGoal}
+              path={displayPath}
+              currentStep={displayCurrentStep}
+              onCellClick={handleCellClick}
+              pixelSize={gridPixelSize}
+            />
+          </Stack>
+        </Paper>
       </Box>
     </Box>
   );
 }
+
+
