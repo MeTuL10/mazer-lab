@@ -1,4 +1,4 @@
-import {
+﻿import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
@@ -100,6 +100,15 @@ export default function ModelParametersPanel({
             onChange={(e) => setForm((prev) => ({ ...prev, epsilon: e.target.value }))}
           />
 
+          <FieldHint label="Epsilon Decay" hint={MODEL_PARAMETER_HINTS.epsilon_decay} />
+          <TextField
+            size="small"
+            type="number"
+            value={form.epsilon_decay}
+            inputProps={{ min: 0, max: 1, step: 0.01 }}
+            onChange={(e) => setForm((prev) => ({ ...prev, epsilon_decay: e.target.value }))}
+          />
+
           <FieldHint label="Max Steps" hint={MODEL_PARAMETER_HINTS.max_steps} />
           <TextField
             size="small"
@@ -113,3 +122,4 @@ export default function ModelParametersPanel({
     </Accordion>
   );
 }
+

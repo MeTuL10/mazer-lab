@@ -70,6 +70,7 @@ class SimulateRequest(BaseModel):
     alpha: float = Field(default=0.1, gt=0.0, le=1.0)
     gamma: float = Field(default=0.95, gt=0.0, le=1.0)
     epsilon: float = Field(default=0.15, ge=0.0, le=1.0)
+    epsilon_decay: float = Field(default=1.0, ge=0.0, le=1.0)
     max_steps: int = Field(default=200, ge=10, le=2000)
     maze: MazeInput | None = None
 

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
@@ -34,6 +34,7 @@ export default function SimulationResultsPanel({
   error,
   showTraining,
   onShowTrainingChange,
+  onSkipLiveTraining,
   trainingProgress,
   onRunSimulation,
   onReplayPath,
@@ -54,6 +55,8 @@ export default function SimulationResultsPanel({
   const progressPercent = progressTotal > 0
     ? Math.min(100, (progressCompleted / progressTotal) * 100)
     : 0;
+
+  const isLiveTrainingActive = showTraining && (loading || (trainingProgress?.buffered ?? 0) > 0);
 
   return (
     <Accordion expanded={expanded} onChange={onToggle}>
@@ -106,16 +109,25 @@ export default function SimulationResultsPanel({
             </Alert>
           ) : null}
 
-          {loading && showTraining ? (
+          {isLiveTrainingActive ? (
             <Stack spacing={0.6}>
-              <Typography variant="caption" color="text.secondary">
-                {progressTotal > 0
-                  ? `Streaming episodes: ${progressCompleted}/${progressTotal}`
-                  : "Preparing training stream..."}
-                {trainingProgress?.buffered > 0
-                  ? ` | buffered: ${trainingProgress.buffered}`
-                  : ""}
-              </Typography>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                <Typography variant="caption" color="text.secondary">
+                  {progressTotal > 0
+                    ? `${loading ? "Streaming" : "Rendering buffered"} episodes: ${progressCompleted}/${progressTotal}`
+                    : loading
+                      ? "Preparing training stream..."
+                      : "Rendering buffered episodes..."}
+                  {trainingProgress?.buffered > 0
+                    ? ` | buffered: ${trainingProgress.buffered}`
+                    : ""}
+                </Typography>
+                {onSkipLiveTraining ? (
+                  <Button size="small" variant="text" onClick={onSkipLiveTraining}>
+                    Skip live training
+                  </Button>
+                ) : null}
+              </Stack>
               <LinearProgress
                 variant={progressTotal > 0 ? "determinate" : "indeterminate"}
                 value={progressPercent}
@@ -166,4 +178,5 @@ export default function SimulationResultsPanel({
     </Accordion>
   );
 }
+
 

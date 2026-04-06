@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -80,6 +80,7 @@ export default function App() {
   const [showTraining, setShowTraining] = useState(false);
   const [trainingView, setTrainingView] = useState(DEFAULT_TRAINING_VIEW);
   const streamQueueRef = useRef([]);
+  const skipLiveTrainingRef = useRef(false);
 
   const [expandedPanels, setExpandedPanels] = useState({
     maze: true,
@@ -164,8 +165,16 @@ export default function App() {
   }
 
   function resetTrainingView() {
+    skipLiveTrainingRef.current = false;
     streamQueueRef.current = [];
     setTrainingView(DEFAULT_TRAINING_VIEW);
+  }
+
+  function handleSkipLiveTraining() {
+    skipLiveTrainingRef.current = true;
+    streamQueueRef.current = [];
+    setTrainingView(DEFAULT_TRAINING_VIEW);
+    setShowTraining(false);
   }
 
   function resetSimulationView() {
@@ -298,8 +307,9 @@ export default function App() {
         episodes: parseNumericInput(form.episodes, 800),
         alpha: parseNumericInput(form.alpha, 0.1),
         gamma: parseNumericInput(form.gamma, 0.95),
-        epsilon: parseNumericInput(form.epsilon, 0.15),
-        max_steps: parseNumericInput(form.max_steps, 200),
+        epsilon: parseNumericInput(form.epsilon, 0.8),
+        epsilon_decay: parseNumericInput(form.epsilon_decay, 1.0),
+        max_steps: parseNumericInput(form.max_steps, 60),
         maze: {
           size: mazeDesign.size,
           start: mazeDesign.start,
@@ -311,12 +321,18 @@ export default function App() {
       const result = showTraining
         ? await runSimulationStream(payload, {
             onStarted: (event) => {
+              if (skipLiveTrainingRef.current) {
+                return;
+              }
               setTrainingView((prev) => ({
                 ...prev,
                 total: event.episodes || payload.episodes,
               }));
             },
             onProgress: (event) => {
+              if (skipLiveTrainingRef.current) {
+                return;
+              }
               streamQueueRef.current.push(event);
               setTrainingView((prev) => ({
                 ...prev,
@@ -406,6 +422,7 @@ export default function App() {
             error={error}
             showTraining={showTraining}
             onShowTrainingChange={setShowTraining}
+            onSkipLiveTraining={handleSkipLiveTraining}
             trainingProgress={showTraining ? trainingView : null}
             onRunSimulation={onRunSimulation}
             onReplayPath={() => {
@@ -480,5 +497,3 @@ export default function App() {
     </Box>
   );
 }
-
-

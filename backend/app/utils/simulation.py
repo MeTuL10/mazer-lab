@@ -20,6 +20,7 @@ def build_simulation(request: SimulateRequest) -> tuple[MazeEnv, BaseRLModel, st
         alpha=request.alpha,
         gamma=request.gamma,
         epsilon=request.epsilon,
+        epsilon_decay=request.epsilon_decay,
     )
     model_name = getattr(model, "label", request.model_id)
     return env, model, model_name

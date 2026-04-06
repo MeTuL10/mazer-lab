@@ -15,6 +15,7 @@ export const DEFAULT_FORM = {
   alpha: 0.1,
   gamma: 0.95,
   epsilon: 0.8,
+  epsilon_decay: 1.0,
   max_steps: 60,
 };
 
@@ -31,5 +32,6 @@ export const MODEL_PARAMETER_HINTS = {
   alpha: "Learning rate. Higher alpha updates Q-values faster from new experience.",
   gamma: "Discount factor. Higher gamma makes the agent value long-term rewards more.",
   epsilon: "Exploration rate. Higher epsilon makes the agent try random actions more often.",
+  epsilon_decay: "Epsilon decay per episode. New epsilon = epsilon * decay (0..1).",
   max_steps: "Maximum steps per episode before truncation.",
 };
