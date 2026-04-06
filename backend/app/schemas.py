@@ -7,6 +7,7 @@ from typing import Tuple
 from pydantic import BaseModel, Field, model_validator
 
 from .rl.maze_env import MazeConfig
+from .rl.maze_env import RewardConfig
 
 Coord = Tuple[int, int]
 
@@ -64,6 +65,19 @@ class MazeInput(BaseModel):
         )
 
 
+class RewardsInput(BaseModel):
+    step_reward: float = Field(default=-0.04)
+    wall_penalty: float = Field(default=-0.1)
+    goal_reward: float = Field(default=1.0)
+
+    def to_config(self) -> RewardConfig:
+        return RewardConfig(
+            step_reward=float(self.step_reward),
+            wall_penalty=float(self.wall_penalty),
+            goal_reward=float(self.goal_reward),
+        )
+
+
 class SimulateRequest(BaseModel):
     model_id: str = Field(default="q_learning")
     episodes: int = Field(default=800, ge=1)
@@ -73,6 +87,7 @@ class SimulateRequest(BaseModel):
     epsilon_decay: float = Field(default=1.0, ge=0.0, le=1.0)
     max_steps: int = Field(default=200, ge=10, le=2000)
     maze: MazeInput | None = None
+    rewards: RewardsInput | None = None
 
 
 class SimulationMetrics(BaseModel):
@@ -80,6 +95,7 @@ class SimulationMetrics(BaseModel):
     episodes: int
     mean_reward: float
     success_rate: float
+    optimal_path_reward: float
 
 
 class SimulateResponse(BaseModel):

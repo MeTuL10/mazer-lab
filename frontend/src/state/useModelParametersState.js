@@ -33,10 +33,21 @@ export function useModelParametersState({ setError }) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  function onRewardFieldChange(field, value) {
+    setForm((prev) => ({
+      ...prev,
+      rewards: {
+        ...prev.rewards,
+        [field]: value,
+      },
+    }));
+  }
+
   return {
     models,
     form,
     selectedModel,
     onFormFieldChange,
+    onRewardFieldChange,
   };
 }

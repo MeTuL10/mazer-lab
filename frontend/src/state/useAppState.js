@@ -54,6 +54,7 @@ export function useAppState() {
         models: modelState.models,
         form: modelState.form,
         onFormFieldChange: modelState.onFormFieldChange,
+        onRewardFieldChange: modelState.onRewardFieldChange,
       },
       simulationResults: {
         expanded: panelState.expandedPanels.result,

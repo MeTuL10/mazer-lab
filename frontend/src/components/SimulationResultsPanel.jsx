@@ -18,11 +18,30 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
+import { RESULT_METRIC_HINTS } from "../constants";
+
 function formatMetric(value) {
   if (typeof value === "number") {
     return Number.isInteger(value) ? `${value}` : value.toFixed(4);
   }
   return value;
+}
+
+function MetricLabel({ label, hint }) {
+  return (
+    <Stack direction="row" spacing={0.35} alignItems="center">
+      <Typography variant="caption" sx={{ color: "text.secondary", letterSpacing: "0.03em" }}>
+        {label}
+      </Typography>
+      {hint ? (
+        <Tooltip title={hint} arrow placement="top">
+          <IconButton size="small" sx={{ p: 0.15 }}>
+            <HelpOutlineIcon fontSize="inherit" />
+          </IconButton>
+        </Tooltip>
+      ) : null}
+    </Stack>
+  );
 }
 
 export default function SimulationResultsPanel({ model }) {
@@ -47,8 +66,13 @@ export default function SimulationResultsPanel({ model }) {
         { label: "Algorithm", value: simResult.metrics.algorithm },
         { label: "Solved", value: simResult.solved ? "Yes" : "No" },
         { label: "Path Length", value: simResult.path.length },
-        { label: "Mean Reward", value: simResult.metrics.mean_reward },
-        { label: "Success Rate", value: simResult.metrics.success_rate },
+        { label: "Mean Reward", value: simResult.metrics.mean_reward, hint: RESULT_METRIC_HINTS.mean_reward },
+        { label: "Success Rate", value: simResult.metrics.success_rate, hint: RESULT_METRIC_HINTS.success_rate },
+        {
+          label: "Optimal Path Reward",
+          value: simResult.metrics.optimal_path_reward,
+          hint: RESULT_METRIC_HINTS.optimal_path_reward,
+        },
       ]
     : [];
 
@@ -150,9 +174,7 @@ export default function SimulationResultsPanel({ model }) {
               >
                 {metricCards.map((item) => (
                   <Box key={item.label} className="result-card">
-                    <Typography variant="caption" sx={{ color: "text.secondary", letterSpacing: "0.03em" }}>
-                      {item.label}
-                    </Typography>
+                    <MetricLabel label={item.label} hint={item.hint} />
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
                       {formatMetric(item.value)}
                     </Typography>

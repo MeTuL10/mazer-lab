@@ -3,6 +3,7 @@
 import { runSimulation, runSimulationStream } from "../api";
 import {
   DEFAULT_FORM,
+  DEFAULT_REWARDS,
   DEFAULT_TRAINING_VIEW,
   TRAINING_REPLAY_INTERVAL_MS,
   TRAINING_STREAM_RENDER_INTERVAL_MS,
@@ -164,6 +165,11 @@ export function useSimulationState({
         epsilon: parseNumericInput(form.epsilon, DEFAULT_FORM.epsilon),
         epsilon_decay: parseNumericInput(form.epsilon_decay, DEFAULT_FORM.epsilon_decay),
         max_steps: parseNumericInput(form.max_steps, DEFAULT_FORM.max_steps),
+        rewards: {
+          step_reward: parseNumericInput(form.rewards?.step_reward, DEFAULT_REWARDS.step_reward),
+          wall_penalty: parseNumericInput(form.rewards?.wall_penalty, DEFAULT_REWARDS.wall_penalty),
+          goal_reward: parseNumericInput(form.rewards?.goal_reward, DEFAULT_REWARDS.goal_reward),
+        },
         maze: {
           size: mazeDesign.size,
           start: mazeDesign.start,

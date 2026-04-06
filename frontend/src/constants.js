@@ -34,6 +34,12 @@ export const MAZE_VIEW_LABEL_MIN_WIDTH = 122;
 export const MAZE_VIEW_RUN_BUTTON_MIN_WIDTH = 190;
 export const MAZE_VIEW_REPLAY_BUTTON_MIN_WIDTH = 140;
 
+export const DEFAULT_REWARDS = {
+  step_reward: -0.04,
+  wall_penalty: -0.1,
+  goal_reward: 1.0,
+};
+
 export const DEFAULT_FORM = {
   model_id: "",
   episodes: 800,
@@ -42,6 +48,7 @@ export const DEFAULT_FORM = {
   epsilon: 0.8,
   epsilon_decay: 1.0,
   max_steps: 60,
+  rewards: DEFAULT_REWARDS,
 };
 
 export const DEFAULT_TRAINING_VIEW = {
@@ -61,4 +68,13 @@ export const MODEL_PARAMETER_HINTS = {
   epsilon: "Exploration rate. Higher epsilon makes the agent try random actions more often.",
   epsilon_decay: "Epsilon decay per episode. New epsilon = epsilon * decay (0..1).",
   max_steps: "Maximum steps per episode before truncation.",
+  step_reward: "Reward applied for each valid step. Typically a small negative value.",
+  wall_penalty: "Penalty applied when agent tries to move into a wall or out of bounds.",
+  goal_reward: "Reward given when the agent reaches the goal tile.",
+};
+
+export const RESULT_METRIC_HINTS = {
+  mean_reward: "Average total reward per training episode. Higher generally means better learned behavior.",
+  success_rate: "Fraction of episodes with positive total reward in this implementation.",
+  optimal_path_reward: "Total reward accumulated while following the final greedy path after training.",
 };

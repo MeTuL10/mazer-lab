@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Tuple
@@ -85,16 +85,18 @@ class BaseRLModel(ABC):
     def train(self) -> Dict[str, Any]:
         raise NotImplementedError
 
-    def greedy_path(self, max_steps: int) -> Tuple[List[List[int]], bool]:
+    def greedy_path(self, max_steps: int) -> Tuple[List[List[int]], bool, float]:
         state, _ = self.env.reset()
         coords = [list(self.env.state_to_coord(state))]
         solved = False
+        total_reward = 0.0
 
         for _ in range(max_steps):
             action = self.greedy_action(state)
-            next_state, _, done, truncated, _ = self.env.step(action)
+            next_state, reward, done, truncated, _ = self.env.step(action)
             coords.append(list(self.env.state_to_coord(next_state)))
             state = next_state
+            total_reward += reward
 
             if done:
                 solved = True
@@ -102,7 +104,7 @@ class BaseRLModel(ABC):
             if truncated:
                 break
 
-        return coords, solved
+        return coords, solved, float(total_reward)
 
     def _success_rate(self, rewards: List[float]) -> float:
         successes = [1.0 if value > 0.0 else 0.0 for value in rewards]
