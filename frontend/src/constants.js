@@ -1,13 +1,32 @@
-export const API_DEFAULT_BASE_URL = "http://localhost:8000";
+﻿export const API_DEFAULT_BASE_URL = "http://localhost:8000";
 
 export const DEFAULT_GRID_SIZE = 8;
 export const MIN_GRID_SIZE = 4;
 export const MAX_GRID_SIZE = 30;
+export const MAZE_RESERVED_TILES = 2;
+
 export const DEFAULT_GRID_PIXEL_SIZE = 760;
 export const DEFAULT_RANDOM_WALLS = 10;
 
 export const TRAINING_REPLAY_INTERVAL_MS = 120;
 export const TRAINING_STREAM_RENDER_INTERVAL_MS = 85;
+
+export const TILE_TOOLS = {
+  START: "start",
+  GOAL: "goal",
+  WALL: "wall",
+  ERASE: "erase",
+};
+
+export const DEFAULT_TILE_TOOL = TILE_TOOLS.WALL;
+
+export const MAZE_VIEW_SLIDER_MIN = 320;
+export const MAZE_VIEW_SLIDER_MAX = 1100;
+export const MAZE_VIEW_SLIDER_STEP = 10;
+export const MAZE_VIEW_SLIDER_WIDTH_SM = 340;
+export const MAZE_VIEW_LABEL_MIN_WIDTH = 122;
+export const MAZE_VIEW_RUN_BUTTON_MIN_WIDTH = 190;
+export const MAZE_VIEW_REPLAY_BUTTON_MIN_WIDTH = 140;
 
 export const DEFAULT_FORM = {
   model_id: "",

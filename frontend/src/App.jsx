@@ -1,12 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Box,
-  Button,
-  Paper,
-  Slider,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Stack } from "@mui/material";
 
 import { fetchModels, runSimulation, runSimulationStream } from "./api";
 import {
@@ -14,53 +7,30 @@ import {
   DEFAULT_GRID_PIXEL_SIZE,
   DEFAULT_GRID_SIZE,
   DEFAULT_RANDOM_WALLS,
+  DEFAULT_TILE_TOOL,
   DEFAULT_TRAINING_VIEW,
   MAX_GRID_SIZE,
   MIN_GRID_SIZE,
+  TILE_TOOLS,
   TRAINING_REPLAY_INTERVAL_MS,
   TRAINING_STREAM_RENDER_INTERVAL_MS,
 } from "./constants";
 import AppTitle from "./components/AppTitle";
 import MazeDesignPanel from "./components/MazeDesignPanel";
-import MazeGrid from "./components/MazeGrid";
+import MazeViewPanel from "./components/MazeViewPanel";
 import ModelParametersPanel from "./components/ModelParametersPanel";
 import SimulationResultsPanel from "./components/SimulationResultsPanel";
-
-function parseNumericInput(value, fallback) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function createMazeDesign(size) {
-  return {
-    size,
-    start: [0, 0],
-    goal: [size - 1, size - 1],
-    walls: [],
-  };
-}
-
-function coordKey(row, col) {
-  return `${row}-${col}`;
-}
-
-function isSameCoord(coord, row, col) {
-  return coord[0] === row && coord[1] === col;
-}
-
-function buildMazeGrid(design) {
-  const grid = Array.from({ length: design.size }, () => Array(design.size).fill(0));
-  for (const [row, col] of design.walls) {
-    if (row >= 0 && row < design.size && col >= 0 && col < design.size) {
-      grid[row][col] = 1;
-    }
-  }
-  return grid;
-}
+import { clampToRange, parseNumericInput } from "./utils/number";
+import {
+  buildMazeGrid,
+  coordKey,
+  createMazeDesign,
+  generateRandomWalls,
+  isSameCoord,
+  keySetToWallCoords,
+  maxWallsForSize,
+  wallCoordsToKeySet,
+} from "./utils/maze";
 
 export default function App() {
   const [models, setModels] = useState([]);
@@ -73,7 +43,7 @@ export default function App() {
 
   const [gridSizeInput, setGridSizeInput] = useState(DEFAULT_GRID_SIZE);
   const [wallCountInput, setWallCountInput] = useState(DEFAULT_RANDOM_WALLS);
-  const [tileTool, setTileTool] = useState("wall");
+  const [tileTool, setTileTool] = useState(DEFAULT_TILE_TOOL);
   const [gridPixelSize, setGridPixelSize] = useState(DEFAULT_GRID_PIXEL_SIZE);
   const [mazeDesign, setMazeDesign] = useState(createMazeDesign(DEFAULT_GRID_SIZE));
 
@@ -148,7 +118,7 @@ export default function App() {
   const designedMaze = useMemo(() => buildMazeGrid(mazeDesign), [mazeDesign]);
 
   const wallCount = mazeDesign.walls.length;
-  const maxRandomWalls = mazeDesign.size * mazeDesign.size - 2;
+  const maxRandomWalls = maxWallsForSize(mazeDesign.size);
 
   const canRun = useMemo(() => {
     return Boolean(form.model_id) && !loading;
@@ -177,6 +147,11 @@ export default function App() {
     setShowTraining(false);
   }
 
+  function handleReplayPath() {
+    setCurrentStep(0);
+    setIsAnimating(true);
+  }
+
   function resetSimulationView() {
     setSimResult(null);
     setCurrentStep(0);
@@ -191,7 +166,7 @@ export default function App() {
 
   function handleCreateGrid() {
     setError("");
-    const size = clamp(
+    const size = clampToRange(
       Math.floor(parseNumericInput(gridSizeInput, DEFAULT_GRID_SIZE)),
       MIN_GRID_SIZE,
       MAX_GRID_SIZE
@@ -204,9 +179,9 @@ export default function App() {
     setError("");
     updateDesign((prev) => {
       const key = coordKey(row, col);
-      const wallSet = new Set(prev.walls.map(([r, c]) => coordKey(r, c)));
+      const wallSet = wallCoordsToKeySet(prev.walls);
 
-      if (tileTool === "start") {
+      if (tileTool === TILE_TOOLS.START) {
         if (isSameCoord(prev.goal, row, col)) {
           setError("Start tile cannot overlap the goal tile.");
           return prev;
@@ -215,11 +190,11 @@ export default function App() {
         return {
           ...prev,
           start: [row, col],
-          walls: [...wallSet].map((entry) => entry.split("-").map(Number)),
+          walls: keySetToWallCoords(wallSet),
         };
       }
 
-      if (tileTool === "goal") {
+      if (tileTool === TILE_TOOLS.GOAL) {
         if (isSameCoord(prev.start, row, col)) {
           setError("Goal tile cannot overlap the start tile.");
           return prev;
@@ -228,7 +203,7 @@ export default function App() {
         return {
           ...prev,
           goal: [row, col],
-          walls: [...wallSet].map((entry) => entry.split("-").map(Number)),
+          walls: keySetToWallCoords(wallSet),
         };
       }
 
@@ -236,7 +211,7 @@ export default function App() {
         return prev;
       }
 
-      if (tileTool === "erase") {
+      if (tileTool === TILE_TOOLS.ERASE) {
         wallSet.delete(key);
       } else if (wallSet.has(key)) {
         wallSet.delete(key);
@@ -246,7 +221,7 @@ export default function App() {
 
       return {
         ...prev,
-        walls: [...wallSet].map((entry) => entry.split("-").map(Number)),
+        walls: keySetToWallCoords(wallSet),
       };
     });
   }
@@ -259,36 +234,16 @@ export default function App() {
   function handleRandomWalls() {
     setError("");
     updateDesign((prev) => {
-      const requested = clamp(
+      const requested = clampToRange(
         Math.floor(parseNumericInput(wallCountInput, 0)),
         0,
-        prev.size * prev.size - 2
+        maxWallsForSize(prev.size)
       );
       setWallCountInput(requested);
 
-      const excluded = new Set([
-        coordKey(prev.start[0], prev.start[1]),
-        coordKey(prev.goal[0], prev.goal[1]),
-      ]);
-
-      const candidates = [];
-      for (let row = 0; row < prev.size; row += 1) {
-        for (let col = 0; col < prev.size; col += 1) {
-          const key = coordKey(row, col);
-          if (!excluded.has(key)) {
-            candidates.push([row, col]);
-          }
-        }
-      }
-
-      for (let i = candidates.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-      }
-
       return {
         ...prev,
-        walls: candidates.slice(0, requested),
+        walls: generateRandomWalls(prev, requested),
       };
     });
   }
@@ -304,12 +259,12 @@ export default function App() {
     try {
       const payload = {
         model_id: form.model_id,
-        episodes: parseNumericInput(form.episodes, 800),
-        alpha: parseNumericInput(form.alpha, 0.1),
-        gamma: parseNumericInput(form.gamma, 0.95),
-        epsilon: parseNumericInput(form.epsilon, 0.8),
-        epsilon_decay: parseNumericInput(form.epsilon_decay, 1.0),
-        max_steps: parseNumericInput(form.max_steps, 60),
+        episodes: parseNumericInput(form.episodes, DEFAULT_FORM.episodes),
+        alpha: parseNumericInput(form.alpha, DEFAULT_FORM.alpha),
+        gamma: parseNumericInput(form.gamma, DEFAULT_FORM.gamma),
+        epsilon: parseNumericInput(form.epsilon, DEFAULT_FORM.epsilon),
+        epsilon_decay: parseNumericInput(form.epsilon_decay, DEFAULT_FORM.epsilon_decay),
+        max_steps: parseNumericInput(form.max_steps, DEFAULT_FORM.max_steps),
         maze: {
           size: mazeDesign.size,
           start: mazeDesign.start,
@@ -425,74 +380,25 @@ export default function App() {
             onSkipLiveTraining={handleSkipLiveTraining}
             trainingProgress={showTraining ? trainingView : null}
             onRunSimulation={onRunSimulation}
-            onReplayPath={() => {
-              setCurrentStep(0);
-              setIsAnimating(true);
-            }}
+            onReplayPath={handleReplayPath}
           />
         </Stack>
 
-        <Paper className="maze-panel" sx={{ p: 2, borderRadius: 3 }} elevation={4}>
-          <Stack spacing={1.4}>
-            <Stack spacing={0.8}>
-              <Typography variant="h6" sx={{ fontWeight: 700, textAlign: "center" }}>
-                Maze View
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ alignSelf: "flex-start" }}>
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={onRunSimulation}
-                  disabled={!canRun}
-                  sx={{ minWidth: 190, px: 3 }}
-                >
-                  {loading ? "Training in progress" : "Run Simulation"}
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    setCurrentStep(0);
-                    setIsAnimating(true);
-                  }}
-                  disabled={loading || !simResult?.path?.length}
-                  sx={{ minWidth: 140, px: 2 }}
-                >
-                  Replay Path
-                </Button>
-              </Stack>
-            </Stack>
-
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={1.2}
-              alignItems={{ xs: "stretch", sm: "center" }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 122, textAlign: "left" }}>
-                Grid Size in View
-              </Typography>
-              <Slider
-                min={320}
-                max={1100}
-                step={10}
-                value={gridPixelSize}
-                onChange={(_event, value) => setGridPixelSize(value)}
-                valueLabelDisplay="auto"
-                sx={{ width: { xs: "100%", sm: 340 }, mx: { xs: 0, sm: "auto" } }}
-              />
-            </Stack>
-
-            <MazeGrid
-              maze={displayMaze}
-              start={displayStart}
-              goal={displayGoal}
-              path={displayPath}
-              currentStep={displayCurrentStep}
-              onCellClick={handleCellClick}
-              pixelSize={gridPixelSize}
-            />
-          </Stack>
-        </Paper>
+        <MazeViewPanel
+          canRun={canRun}
+          loading={loading}
+          onRunSimulation={onRunSimulation}
+          onReplayPath={handleReplayPath}
+          canReplay={Boolean(simResult?.path?.length)}
+          gridPixelSize={gridPixelSize}
+          onGridPixelSizeChange={setGridPixelSize}
+          maze={displayMaze}
+          start={displayStart}
+          goal={displayGoal}
+          path={displayPath}
+          currentStep={displayCurrentStep}
+          onCellClick={handleCellClick}
+        />
       </Box>
     </Box>
   );
