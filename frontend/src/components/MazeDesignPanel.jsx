@@ -13,22 +13,24 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { MAX_GRID_SIZE, MIN_GRID_SIZE, TILE_TOOLS } from "../constants";
 
-export default function MazeDesignPanel({
-  expanded,
-  onToggle,
-  mazeDesign,
-  wallCount,
-  gridSizeInput,
-  setGridSizeInput,
-  onCreateGrid,
-  tileTool,
-  setTileTool,
-  wallCountInput,
-  setWallCountInput,
-  maxRandomWalls,
-  onRandomWalls,
-  onClearWalls,
-}) {
+export default function MazeDesignPanel({ model }) {
+  const {
+    expanded,
+    onToggle,
+    mazeDesign,
+    wallCount,
+    gridSizeInput,
+    setGridSizeInput,
+    onCreateGrid,
+    tileTool,
+    setTileTool,
+    wallCountInput,
+    setWallCountInput,
+    maxRandomWalls,
+    onRandomWalls,
+    onClearWalls,
+  } = model;
+
   return (
     <Accordion expanded={expanded} onChange={onToggle}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>

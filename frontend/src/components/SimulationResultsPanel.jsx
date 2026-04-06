@@ -25,21 +25,23 @@ function formatMetric(value) {
   return value;
 }
 
-export default function SimulationResultsPanel({
-  expanded,
-  onToggle,
-  simResult,
-  canRun,
-  loading,
-  error,
-  showTraining,
-  onShowTrainingChange,
-  onSkipLiveTraining,
-  trainingProgress,
-  onRunSimulation,
-  onReplayPath,
-  showRunButton = true,
-}) {
+export default function SimulationResultsPanel({ model }) {
+  const {
+    expanded,
+    onToggle,
+    simResult,
+    canRun,
+    loading,
+    error,
+    showTraining,
+    onShowTrainingChange,
+    onSkipLiveTraining,
+    trainingProgress,
+    onRunSimulation,
+    onReplayPath,
+    showRunButton = true,
+  } = model;
+
   const metricCards = simResult
     ? [
         { label: "Algorithm", value: simResult.metrics.algorithm },
@@ -139,7 +141,6 @@ export default function SimulationResultsPanel({
 
           {simResult ? (
             <>
-
               <Box
                 sx={{
                   display: "grid",
@@ -178,5 +179,3 @@ export default function SimulationResultsPanel({
     </Accordion>
   );
 }
-
-

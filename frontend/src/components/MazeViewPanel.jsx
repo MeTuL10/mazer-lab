@@ -17,21 +17,23 @@ import {
 } from "../constants";
 import MazeGrid from "./MazeGrid";
 
-export default function MazeViewPanel({
-  canRun,
-  loading,
-  onRunSimulation,
-  onReplayPath,
-  canReplay,
-  gridPixelSize,
-  onGridPixelSizeChange,
-  maze,
-  start,
-  goal,
-  path,
-  currentStep,
-  onCellClick,
-}) {
+export default function MazeViewPanel({ model }) {
+  const {
+    canRun,
+    loading,
+    onRunSimulation,
+    onReplayPath,
+    canReplay,
+    gridPixelSize,
+    onGridPixelSizeChange,
+    maze,
+    start,
+    goal,
+    path,
+    currentStep,
+    onCellClick,
+  } = model;
+
   return (
     <Paper className="maze-panel" sx={{ p: 2, borderRadius: 3 }} elevation={4}>
       <Stack spacing={1.4}>

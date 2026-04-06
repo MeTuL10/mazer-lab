@@ -1,5 +1,11 @@
 ﻿export const API_DEFAULT_BASE_URL = "http://localhost:8000";
 
+export const APP_SHELL_PADDING_X = { xs: 1.5, md: 2.5 };
+export const APP_SHELL_PADDING_Y = 2.5;
+export const APP_LAYOUT_MARGIN_TOP = 1.5;
+export const APP_LAYOUT_GAP = 2;
+export const APP_LAYOUT_RIGHT_COLUMN = { xs: "1fr", md: "minmax(340px, 430px) 1fr" };
+
 export const DEFAULT_GRID_SIZE = 8;
 export const MIN_GRID_SIZE = 4;
 export const MAX_GRID_SIZE = 30;
@@ -42,7 +48,9 @@ export const DEFAULT_TRAINING_VIEW = {
   completed: 0,
   total: 0,
   path: [],
+  currentStep: 0,
   buffered: 0,
+  isEpisodeActive: false,
 };
 
 export const MODEL_PARAMETER_HINTS = {
