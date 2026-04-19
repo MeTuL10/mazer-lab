@@ -55,6 +55,7 @@ export const DEFAULT_TRAINING_VIEW = {
   completed: 0,
   total: 0,
   path: [],
+  policy: [],
   currentStep: 0,
   buffered: 0,
   isEpisodeActive: false,

@@ -12,6 +12,7 @@ export function usePanelState() {
   const [expandedPanels, setExpandedPanels] = useState({
     maze: true,
     model: true,
+    rewards: true,
     result: true,
   });
 

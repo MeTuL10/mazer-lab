@@ -103,5 +103,6 @@ class SimulateResponse(BaseModel):
     start: List[int]
     goal: List[int]
     path: List[List[int]]
+    policy: List[List[str | None]]
     solved: bool
     metrics: SimulationMetrics

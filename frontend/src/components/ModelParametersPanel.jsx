@@ -3,7 +3,6 @@
   AccordionDetails,
   AccordionSummary,
   Chip,
-  Divider,
   IconButton,
   MenuItem,
   Stack,
@@ -39,7 +38,6 @@ export default function ModelParametersPanel({ model }) {
     models,
     form,
     onFormFieldChange,
-    onRewardFieldChange,
   } = model;
 
   return (
@@ -120,38 +118,6 @@ export default function ModelParametersPanel({ model }) {
             value={form.max_steps}
             inputProps={{ min: 10, max: 2000 }}
             onChange={(e) => onFormFieldChange("max_steps", e.target.value)}
-          />
-
-          <Divider sx={{ my: 0.5 }} />
-          <Typography variant="body2" sx={{ fontWeight: 700, letterSpacing: "0.03em", textTransform: "uppercase" }}>
-            Reward Configuration
-          </Typography>
-
-          <FieldHint label="Step Reward" hint={MODEL_PARAMETER_HINTS.step_reward} />
-          <TextField
-            size="small"
-            type="number"
-            value={form.rewards?.step_reward}
-            inputProps={{ step: 0.01 }}
-            onChange={(e) => onRewardFieldChange("step_reward", e.target.value)}
-          />
-
-          <FieldHint label="Wall Penalty" hint={MODEL_PARAMETER_HINTS.wall_penalty} />
-          <TextField
-            size="small"
-            type="number"
-            value={form.rewards?.wall_penalty}
-            inputProps={{ step: 0.01 }}
-            onChange={(e) => onRewardFieldChange("wall_penalty", e.target.value)}
-          />
-
-          <FieldHint label="Goal Reward" hint={MODEL_PARAMETER_HINTS.goal_reward} />
-          <TextField
-            size="small"
-            type="number"
-            value={form.rewards?.goal_reward}
-            inputProps={{ step: 0.01 }}
-            onChange={(e) => onRewardFieldChange("goal_reward", e.target.value)}
           />
         </Stack>
       </AccordionDetails>

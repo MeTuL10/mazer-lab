@@ -34,6 +34,7 @@ def build_simulation(request: SimulateRequest) -> tuple[MazeEnv, BaseRLModel, st
 
 def build_simulation_response(
     env: MazeEnv,
+    model: BaseRLModel,
     training_result: dict[str, Any],
     path: list[list[int]],
     solved: bool,
@@ -44,6 +45,7 @@ def build_simulation_response(
         start=list(env.start),
         goal=list(env.goal),
         path=path,
+        policy=model._extract_policy_grid(),
         solved=solved,
         metrics=SimulationMetrics(
             algorithm=training_result["algorithm"],

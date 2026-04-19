@@ -8,7 +8,17 @@ import numpy as np
 from .maze_env import MazeEnv
 
 EpisodePath = List[List[int]]
-ProgressCallback = Callable[[int, int, EpisodePath], None]
+PolicyGrid = List[List[str | None]]
+ProgressCallback = Callable[[int, int, EpisodePath, PolicyGrid], None]
+
+ACTION_TO_ARROW = {
+    0: "↑",
+    1: "→",
+    2: "↓",
+    3: "←",
+}
+
+POLICY_UNKNOWN = "x"
 
 
 class BaseRLModel(ABC):
@@ -43,6 +53,29 @@ class BaseRLModel(ABC):
     def set_progress_callback(self, callback: ProgressCallback | None) -> None:
         self._progress_callback = callback
 
+    def _extract_policy_grid(self) -> PolicyGrid:
+        policy: PolicyGrid = []
+
+        for row in range(self.env.rows):
+            policy_row: List[str | None] = []
+            for col in range(self.env.cols):
+                if (row, col) == self.env.goal:
+                    policy_row.append("G")
+                    continue
+
+                state = self.env.coord_to_state((row, col))
+                q_values = self.q_table[state]
+                if np.allclose(q_values, 0.0):
+                    policy_row.append(POLICY_UNKNOWN)
+                    continue
+
+                action = int(np.argmax(q_values))
+                policy_row.append(ACTION_TO_ARROW.get(action, POLICY_UNKNOWN))
+
+            policy.append(policy_row)
+
+        return policy
+
     def _report_progress(self, completed_episodes: int, episode_path: EpisodePath | None = None) -> None:
         should_log = (
             completed_episodes % self._progress_interval == 0
@@ -55,7 +88,12 @@ class BaseRLModel(ABC):
 
         self._last_progress_episode = completed_episodes
         if self._progress_callback:
-            self._progress_callback(completed_episodes, self.episodes, episode_path or [])
+            self._progress_callback(
+                completed_episodes,
+                self.episodes,
+                episode_path or [],
+                self._extract_policy_grid(),
+            )
 
     def _apply_epsilon_decay(self) -> None:
         if self.epsilon_decay >= 1.0:
@@ -109,3 +147,5 @@ class BaseRLModel(ABC):
     def _success_rate(self, rewards: List[float]) -> float:
         successes = [1.0 if value > 0.0 else 0.0 for value in rewards]
         return float(np.mean(successes)) if successes else 0.0
+
+

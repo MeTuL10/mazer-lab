@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Sora:wght@400;500;600;700&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Sora:wght@400;500;600;700&display=swap");
 
 :root {
   font-family: "Sora", "Segoe UI", sans-serif;
@@ -47,7 +47,8 @@ body {
   text-shadow: 0 0 20px rgba(255, 56, 56, 0.6);
 }
 
-.maze-grid {
+.maze-grid,
+.policy-grid {
   display: grid;
   max-width: 100%;
   aspect-ratio: 1 / 1;
@@ -56,7 +57,8 @@ body {
   align-content: stretch;
 }
 
-.maze-cell {
+.maze-cell,
+.policy-cell {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,6 +76,11 @@ body {
   transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 }
 
+.policy-cell {
+  font-size: clamp(0.72rem, 1.6vw, 1.1rem);
+  color: #ffd7d7;
+}
+
 .maze-cell.clickable {
   cursor: pointer;
 }
@@ -84,7 +91,8 @@ body {
   box-shadow: 0 2px 12px rgba(255, 70, 70, 0.18);
 }
 
-.maze-cell.wall {
+.maze-cell.wall,
+.policy-cell.wall {
   background: linear-gradient(170deg, #181318, #0f0d10);
   border-color: rgba(255, 62, 62, 0.12);
   color: transparent;
@@ -144,4 +152,3 @@ body {
     padding-top: 0.25rem;
   }
 }
-

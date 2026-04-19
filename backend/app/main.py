@@ -47,7 +47,7 @@ def simulate(request: SimulateRequest) -> SimulateResponse:
 
     logger.info("Training started | model=%s | episodes=%d", model_name, request.episodes)
 
-    def progress_logger(completed: int, total: int, _episode_path: list[list[int]]) -> None:
+    def progress_logger(completed: int, total: int, _episode_path: list[list[int]], _policy: list[list[str | None]]) -> None:
         logger.info(
             "Training progress | model=%s | episodes_completed=%d/%d",
             model_name,
@@ -67,7 +67,7 @@ def simulate(request: SimulateRequest) -> SimulateResponse:
         len(path),
     )
 
-    return build_simulation_response(env, training_result, path, solved, optimal_path_reward)
+    return build_simulation_response(env, model, training_result, path, solved, optimal_path_reward)
 
 
 @app.websocket("/ws/simulate")
@@ -104,7 +104,7 @@ async def simulate_stream(websocket: WebSocket) -> None:
     loop = asyncio.get_running_loop()
     progress_queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
 
-    def progress_logger(completed: int, total: int, episode_path: list[list[int]]) -> None:
+    def progress_logger(completed: int, total: int, episode_path: list[list[int]], policy: list[list[str | None]]) -> None:
         logger.info(
             "Training progress | model=%s | episodes_completed=%d/%d",
             model_name,
@@ -117,6 +117,7 @@ async def simulate_stream(websocket: WebSocket) -> None:
             "completed": completed,
             "total": total,
             "path": episode_path,
+            "policy": policy,
         }
         loop.call_soon_threadsafe(progress_queue.put_nowait, event)
 
@@ -153,7 +154,7 @@ async def simulate_stream(websocket: WebSocket) -> None:
     except WebSocketDisconnect:
         return
 
-    response = build_simulation_response(env, training_result, path, solved, optimal_path_reward)
+    response = build_simulation_response(env, model, training_result, path, solved, optimal_path_reward)
     logger.info(
         "Training stream completed | model=%s | solved=%s | path_length=%d",
         model_name,
