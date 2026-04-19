@@ -1,8 +1,10 @@
 ﻿import {
   Button,
+  FormControlLabel,
   Paper,
   Slider,
   Stack,
+  Switch,
   Typography,
 } from "@mui/material";
 
@@ -16,6 +18,7 @@ import {
   MAZE_VIEW_SLIDER_WIDTH_SM,
 } from "../constants";
 import MazeGrid from "./MazeGrid";
+import PolicyGrid from "./PolicyGrid";
 
 export default function MazeViewPanel({ model }) {
   const {
@@ -26,10 +29,13 @@ export default function MazeViewPanel({ model }) {
     canReplay,
     gridPixelSize,
     onGridPixelSizeChange,
+    viewPolicy,
+    onViewPolicyChange,
     maze,
     start,
     goal,
     path,
+    policy,
     currentStep,
     onCellClick,
   } = model;
@@ -80,17 +86,48 @@ export default function MazeViewPanel({ model }) {
             valueLabelDisplay="auto"
             sx={{ width: { xs: "100%", sm: MAZE_VIEW_SLIDER_WIDTH_SM }, mx: { xs: 0, sm: "auto" } }}
           />
+          <FormControlLabel
+            control={(
+              <Switch
+                size="small"
+                checked={viewPolicy}
+                onChange={(event) => onViewPolicyChange(event.target.checked)}
+              />
+            )}
+            label="View Policy"
+            sx={{ m: 0, ml: { xs: 0, sm: 1 } }}
+          />
         </Stack>
 
-        <MazeGrid
-          maze={maze}
-          start={start}
-          goal={goal}
-          path={path}
-          currentStep={currentStep}
-          onCellClick={onCellClick}
-          pixelSize={gridPixelSize}
-        />
+        <Stack direction={{ xs: "column", lg: "row" }} spacing={1.6} alignItems="flex-start">
+          <Stack spacing={0.6} sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              Agent Path View
+            </Typography>
+            <MazeGrid
+              maze={maze}
+              start={start}
+              goal={goal}
+              path={path}
+              currentStep={currentStep}
+              onCellClick={onCellClick}
+              pixelSize={gridPixelSize}
+            />
+          </Stack>
+
+          {viewPolicy ? (
+            <Stack spacing={0.6} sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                Policy View
+              </Typography>
+              <PolicyGrid
+                maze={maze}
+                policy={policy}
+                pixelSize={gridPixelSize}
+              />
+            </Stack>
+          ) : null}
+        </Stack>
       </Stack>
     </Paper>
   );

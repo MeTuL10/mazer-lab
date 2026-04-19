@@ -24,6 +24,7 @@ export function useSimulationState({
 
   const [showTraining, setShowTraining] = useState(false);
   const [trainingView, setTrainingView] = useState(DEFAULT_TRAINING_VIEW);
+  const [viewPolicy, setViewPolicy] = useState(false);
 
   const streamQueueRef = useRef([]);
   const activeEpisodeRef = useRef(null);
@@ -66,10 +67,12 @@ export function useSimulationState({
         }
 
         const nextPath = next.path || [];
+        const nextPolicy = next.policy || [];
         activeEpisodeRef.current = {
           completed: next.completed,
           total: next.total,
           path: nextPath,
+          policy: nextPolicy,
           step: 0,
         };
 
@@ -77,6 +80,7 @@ export function useSimulationState({
           ...prev,
           total: next.total || prev.total,
           path: nextPath,
+          policy: nextPolicy,
           currentStep: 0,
           isEpisodeActive: true,
           buffered: streamQueueRef.current.length,
@@ -90,6 +94,7 @@ export function useSimulationState({
           ...prev,
           total: activeEpisode.total || prev.total,
           path: activeEpisode.path,
+          policy: activeEpisode.policy,
           currentStep: activeEpisode.step,
           isEpisodeActive: true,
           buffered: streamQueueRef.current.length,
@@ -118,7 +123,9 @@ export function useSimulationState({
 
   const hasLiveFrames = showTraining && (trainingView.isEpisodeActive || trainingView.buffered > 0);
   const livePath = hasLiveFrames ? trainingView.path : [];
+  const livePolicy = hasLiveFrames ? trainingView.policy : [];
   const displayPath = livePath.length > 0 ? livePath : simResult?.path || [];
+  const displayPolicy = livePolicy.length > 0 ? livePolicy : simResult?.policy || [];
   const displayCurrentStep = hasLiveFrames ? trainingView.currentStep : currentStep;
 
   function resetTrainingView() {
@@ -220,6 +227,8 @@ export function useSimulationState({
     canRun,
     showTraining,
     setShowTraining,
+    viewPolicy,
+    setViewPolicy,
     trainingView,
     onRunSimulation,
     handleReplayPath,
@@ -229,6 +238,7 @@ export function useSimulationState({
     displayStart,
     displayGoal,
     displayPath,
+    displayPolicy,
     displayCurrentStep,
   };
 }
