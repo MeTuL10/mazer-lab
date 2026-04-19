@@ -4,6 +4,7 @@ import AppTitle from "./components/AppTitle";
 import MazeDesignPanel from "./components/MazeDesignPanel";
 import MazeViewPanel from "./components/MazeViewPanel";
 import ModelParametersPanel from "./components/ModelParametersPanel";
+import RewardConfigurationPanel from "./components/RewardConfigurationPanel";
 import SimulationResultsPanel from "./components/SimulationResultsPanel";
 import { useAppState } from "./state";
 
@@ -18,6 +19,7 @@ export default function App() {
         <Stack spacing={appModel.leftPanelSpacing}>
           <MazeDesignPanel model={panelModels.mazeDesign} />
           <ModelParametersPanel model={panelModels.modelParameters} />
+          <RewardConfigurationPanel model={panelModels.rewardConfiguration} />
           <SimulationResultsPanel model={panelModels.simulationResults} />
         </Stack>
 

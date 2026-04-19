@@ -5,8 +5,11 @@
   Slider,
   Stack,
   Switch,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import IconButton from "@mui/material/IconButton";
 
 import {
   MAZE_VIEW_LABEL_MIN_WIDTH,
@@ -29,6 +32,8 @@ export default function MazeViewPanel({ model }) {
     canReplay,
     gridPixelSize,
     onGridPixelSizeChange,
+    showTraining,
+    onShowTrainingChange,
     viewPolicy,
     onViewPolicyChange,
     maze,
@@ -96,6 +101,18 @@ export default function MazeViewPanel({ model }) {
             )}
             label="View Policy"
             sx={{ m: 0, ml: { xs: 0, sm: 1 } }}
+          />
+          <FormControlLabel
+            control={(
+              <Switch
+                size="small"
+                checked={showTraining}
+                disabled={loading}
+                onChange={(event) => onShowTrainingChange(event.target.checked)}
+              />
+            )}
+            label="Show Training Live"
+            sx={{ m: 0 }}
           />
         </Stack>
 

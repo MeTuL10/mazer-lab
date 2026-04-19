@@ -54,6 +54,11 @@ export function useAppState() {
         models: modelState.models,
         form: modelState.form,
         onFormFieldChange: modelState.onFormFieldChange,
+      },
+      rewardConfiguration: {
+        expanded: panelState.expandedPanels.rewards,
+        onToggle: panelState.handlePanelToggle("rewards"),
+        rewards: modelState.form.rewards,
         onRewardFieldChange: modelState.onRewardFieldChange,
       },
       simulationResults: {
@@ -79,6 +84,8 @@ export function useAppState() {
         canReplay: Boolean(simulationState.simResult?.path?.length),
         gridPixelSize: mazeState.gridPixelSize,
         onGridPixelSizeChange: mazeState.setGridPixelSize,
+        showTraining: simulationState.showTraining,
+        onShowTrainingChange: simulationState.setShowTraining,
         viewPolicy: simulationState.viewPolicy,
         onViewPolicyChange: simulationState.setViewPolicy,
         maze: simulationState.displayMaze,
