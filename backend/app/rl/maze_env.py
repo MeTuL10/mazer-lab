@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -22,6 +22,13 @@ class MazeConfig:
     goal: Coord
 
 
+@dataclass(frozen=True)
+class RewardConfig:
+    step_reward: float = -0.04
+    wall_penalty: float = -0.1
+    goal_reward: float = 1.0
+
+
 DEFAULT_MAZE = MazeConfig(
     grid=[
         [0, 0, 0, 1, 0, 0, 0, 0],
@@ -37,6 +44,8 @@ DEFAULT_MAZE = MazeConfig(
     goal=(7, 7),
 )
 
+DEFAULT_REWARDS = RewardConfig()
+
 
 class MazeEnv(gym.Env):
     """Simple discrete maze environment compatible with Gym-style APIs."""
@@ -50,9 +59,16 @@ class MazeEnv(gym.Env):
         3: (0, -1),  # left
     }
 
-    def __init__(self, config: MazeConfig | None = None, max_episode_steps: int = 200):
+    def __init__(
+        self,
+        config: MazeConfig | None = None,
+        max_episode_steps: int = 200,
+        rewards: RewardConfig | None = None,
+    ):
         super().__init__()
         self.config = config or DEFAULT_MAZE
+        self.rewards = rewards or DEFAULT_REWARDS
+
         self.grid = np.array(self.config.grid, dtype=np.int32)
         if self.grid.ndim != 2:
             raise ValueError("Maze grid must be a 2D matrix.")
@@ -105,15 +121,15 @@ class MazeEnv(gym.Env):
         nr, nc = self.position[0] + dr, self.position[1] + dc
         candidate = (nr, nc)
 
-        reward = -0.04
+        reward = self.rewards.step_reward
         if self._is_valid(candidate):
             self.position = candidate
         else:
-            reward = -0.1
+            reward = self.rewards.wall_penalty
 
         done = self.position == self.goal
         if done:
-            reward = 1.0
+            reward = self.rewards.goal_reward
 
         truncated = self.current_step >= self.max_episode_steps and not done
         state = self.coord_to_state(self.position)

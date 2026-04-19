@@ -1,4 +1,4 @@
-import {
+﻿import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
@@ -18,6 +18,8 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
+import { RESULT_METRIC_HINTS } from "../constants";
+
 function formatMetric(value) {
   if (typeof value === "number") {
     return Number.isInteger(value) ? `${value}` : value.toFixed(4);
@@ -25,27 +27,52 @@ function formatMetric(value) {
   return value;
 }
 
-export default function SimulationResultsPanel({
-  expanded,
-  onToggle,
-  simResult,
-  canRun,
-  loading,
-  error,
-  showTraining,
-  onShowTrainingChange,
-  trainingProgress,
-  onRunSimulation,
-  onReplayPath,
-  showRunButton = true,
-}) {
+function MetricLabel({ label, hint }) {
+  return (
+    <Stack direction="row" spacing={0.35} alignItems="center">
+      <Typography variant="caption" sx={{ color: "text.secondary", letterSpacing: "0.03em" }}>
+        {label}
+      </Typography>
+      {hint ? (
+        <Tooltip title={hint} arrow placement="top">
+          <IconButton size="small" sx={{ p: 0.15 }}>
+            <HelpOutlineIcon fontSize="inherit" />
+          </IconButton>
+        </Tooltip>
+      ) : null}
+    </Stack>
+  );
+}
+
+export default function SimulationResultsPanel({ model }) {
+  const {
+    expanded,
+    onToggle,
+    simResult,
+    canRun,
+    loading,
+    error,
+    showTraining,
+    onShowTrainingChange,
+    onSkipLiveTraining,
+    trainingProgress,
+    onRunSimulation,
+    onReplayPath,
+    showRunButton = true,
+  } = model;
+
   const metricCards = simResult
     ? [
         { label: "Algorithm", value: simResult.metrics.algorithm },
         { label: "Solved", value: simResult.solved ? "Yes" : "No" },
         { label: "Path Length", value: simResult.path.length },
-        { label: "Mean Reward", value: simResult.metrics.mean_reward },
-        { label: "Success Rate", value: simResult.metrics.success_rate },
+        { label: "Mean Reward", value: simResult.metrics.mean_reward, hint: RESULT_METRIC_HINTS.mean_reward },
+        { label: "Success Rate", value: simResult.metrics.success_rate, hint: RESULT_METRIC_HINTS.success_rate },
+        {
+          label: "Optimal Path Reward",
+          value: simResult.metrics.optimal_path_reward,
+          hint: RESULT_METRIC_HINTS.optimal_path_reward,
+        },
       ]
     : [];
 
@@ -54,6 +81,8 @@ export default function SimulationResultsPanel({
   const progressPercent = progressTotal > 0
     ? Math.min(100, (progressCompleted / progressTotal) * 100)
     : 0;
+
+  const isLiveTrainingActive = showTraining && (loading || (trainingProgress?.buffered ?? 0) > 0);
 
   return (
     <Accordion expanded={expanded} onChange={onToggle}>
@@ -106,16 +135,25 @@ export default function SimulationResultsPanel({
             </Alert>
           ) : null}
 
-          {loading && showTraining ? (
+          {isLiveTrainingActive ? (
             <Stack spacing={0.6}>
-              <Typography variant="caption" color="text.secondary">
-                {progressTotal > 0
-                  ? `Streaming episodes: ${progressCompleted}/${progressTotal}`
-                  : "Preparing training stream..."}
-                {trainingProgress?.buffered > 0
-                  ? ` | buffered: ${trainingProgress.buffered}`
-                  : ""}
-              </Typography>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                <Typography variant="caption" color="text.secondary">
+                  {progressTotal > 0
+                    ? `${loading ? "Streaming" : "Rendering buffered"} episodes: ${progressCompleted}/${progressTotal}`
+                    : loading
+                      ? "Preparing training stream..."
+                      : "Rendering buffered episodes..."}
+                  {trainingProgress?.buffered > 0
+                    ? ` | buffered: ${trainingProgress.buffered}`
+                    : ""}
+                </Typography>
+                {onSkipLiveTraining ? (
+                  <Button size="small" variant="text" onClick={onSkipLiveTraining}>
+                    Skip live training
+                  </Button>
+                ) : null}
+              </Stack>
               <LinearProgress
                 variant={progressTotal > 0 ? "determinate" : "indeterminate"}
                 value={progressPercent}
@@ -127,7 +165,6 @@ export default function SimulationResultsPanel({
 
           {simResult ? (
             <>
-
               <Box
                 sx={{
                   display: "grid",
@@ -137,9 +174,7 @@ export default function SimulationResultsPanel({
               >
                 {metricCards.map((item) => (
                   <Box key={item.label} className="result-card">
-                    <Typography variant="caption" sx={{ color: "text.secondary", letterSpacing: "0.03em" }}>
-                      {item.label}
-                    </Typography>
+                    <MetricLabel label={item.label} hint={item.hint} />
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
                       {formatMetric(item.value)}
                     </Typography>
@@ -166,4 +201,3 @@ export default function SimulationResultsPanel({
     </Accordion>
   );
 }
-

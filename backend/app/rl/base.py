@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Tuple
@@ -17,16 +17,21 @@ class BaseRLModel(ABC):
     def __init__(
         self,
         env: MazeEnv,
-        episodes: int = 600,
+        episodes: int = 800,
         alpha: float = 0.1,
         gamma: float = 0.95,
-        epsilon: float = 0.15,
+        epsilon: float = 0.8,
+        epsilon_decay: float = 1.0,
     ):
         self.env = env
         self.episodes = episodes
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
+
+        self._episodes_started = 0
+        self._episode_start_seen = False
         self.n_states = env.observation_space.n
         self.n_actions = env.action_space.n
         self.q_table = np.zeros((self.n_states, self.n_actions), dtype=np.float32)
@@ -52,7 +57,23 @@ class BaseRLModel(ABC):
         if self._progress_callback:
             self._progress_callback(completed_episodes, self.episodes, episode_path or [])
 
+    def _apply_epsilon_decay(self) -> None:
+        if self.epsilon_decay >= 1.0:
+            return
+        self.epsilon = float(max(0.0, min(1.0, self.epsilon * self.epsilon_decay)))
+
     def epsilon_greedy_action(self, state: int) -> int:
+        # We decay epsilon once per episode without requiring each algorithm to call a hook.
+        # MazeEnv resets current_step to 0 at episode start.
+        if getattr(self.env, "current_step", None) == 0:
+            if not self._episode_start_seen:
+                self._episode_start_seen = True
+                self._episodes_started += 1
+                if self._episodes_started > 1:
+                    self._apply_epsilon_decay()
+        else:
+            self._episode_start_seen = False
+
         if np.random.random() < self.epsilon:
             return int(self.env.action_space.sample())
         return int(np.argmax(self.q_table[state]))
@@ -64,16 +85,18 @@ class BaseRLModel(ABC):
     def train(self) -> Dict[str, Any]:
         raise NotImplementedError
 
-    def greedy_path(self, max_steps: int) -> Tuple[List[List[int]], bool]:
+    def greedy_path(self, max_steps: int) -> Tuple[List[List[int]], bool, float]:
         state, _ = self.env.reset()
         coords = [list(self.env.state_to_coord(state))]
         solved = False
+        total_reward = 0.0
 
         for _ in range(max_steps):
             action = self.greedy_action(state)
-            next_state, _, done, truncated, _ = self.env.step(action)
+            next_state, reward, done, truncated, _ = self.env.step(action)
             coords.append(list(self.env.state_to_coord(next_state)))
             state = next_state
+            total_reward += reward
 
             if done:
                 solved = True
@@ -81,7 +104,7 @@ class BaseRLModel(ABC):
             if truncated:
                 break
 
-        return coords, solved
+        return coords, solved, float(total_reward)
 
     def _success_rate(self, rewards: List[float]) -> float:
         successes = [1.0 if value > 0.0 else 0.0 for value in rewards]

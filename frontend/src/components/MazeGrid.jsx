@@ -1,10 +1,18 @@
-import React from "react";
+﻿import { DEFAULT_GRID_PIXEL_SIZE } from "../constants";
 
 function keyFor(row, col) {
   return `${row}-${col}`;
 }
 
-export default function MazeGrid({ maze, start, goal, path, currentStep, onCellClick, pixelSize = 760 }) {
+export default function MazeGrid({
+  maze,
+  start,
+  goal,
+  path,
+  currentStep,
+  onCellClick,
+  pixelSize = DEFAULT_GRID_PIXEL_SIZE,
+}) {
   if (!maze || maze.length === 0 || !maze[0]?.length) {
     return <div className="maze-placeholder">Design a maze, then run a simulation.</div>;
   }

@@ -1,8 +1,9 @@
-import {
+﻿import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Chip,
+  Divider,
   IconButton,
   MenuItem,
   Stack,
@@ -30,14 +31,17 @@ function FieldHint({ label, hint }) {
   );
 }
 
-export default function ModelParametersPanel({
-  expanded,
-  onToggle,
-  selectedModel,
-  models,
-  form,
-  setForm,
-}) {
+export default function ModelParametersPanel({ model }) {
+  const {
+    expanded,
+    onToggle,
+    selectedModel,
+    models,
+    form,
+    onFormFieldChange,
+    onRewardFieldChange,
+  } = model;
+
   return (
     <Accordion expanded={expanded} onChange={onToggle}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -55,11 +59,11 @@ export default function ModelParametersPanel({
             select
             size="small"
             value={form.model_id}
-            onChange={(e) => setForm((prev) => ({ ...prev, model_id: e.target.value }))}
+            onChange={(e) => onFormFieldChange("model_id", e.target.value)}
           >
-            {models.map((model) => (
-              <MenuItem key={model.id} value={model.id}>
-                {model.name}
+            {models.map((item) => (
+              <MenuItem key={item.id} value={item.id}>
+                {item.name}
               </MenuItem>
             ))}
           </TextField>
@@ -70,7 +74,7 @@ export default function ModelParametersPanel({
             type="number"
             value={form.episodes}
             inputProps={{ min: 1 }}
-            onChange={(e) => setForm((prev) => ({ ...prev, episodes: e.target.value }))}
+            onChange={(e) => onFormFieldChange("episodes", e.target.value)}
           />
 
           <FieldHint label="Alpha" hint={MODEL_PARAMETER_HINTS.alpha} />
@@ -79,7 +83,7 @@ export default function ModelParametersPanel({
             type="number"
             value={form.alpha}
             inputProps={{ min: 0.01, max: 1, step: 0.01 }}
-            onChange={(e) => setForm((prev) => ({ ...prev, alpha: e.target.value }))}
+            onChange={(e) => onFormFieldChange("alpha", e.target.value)}
           />
 
           <FieldHint label="Gamma" hint={MODEL_PARAMETER_HINTS.gamma} />
@@ -88,7 +92,7 @@ export default function ModelParametersPanel({
             type="number"
             value={form.gamma}
             inputProps={{ min: 0.01, max: 1, step: 0.01 }}
-            onChange={(e) => setForm((prev) => ({ ...prev, gamma: e.target.value }))}
+            onChange={(e) => onFormFieldChange("gamma", e.target.value)}
           />
 
           <FieldHint label="Epsilon" hint={MODEL_PARAMETER_HINTS.epsilon} />
@@ -97,7 +101,16 @@ export default function ModelParametersPanel({
             type="number"
             value={form.epsilon}
             inputProps={{ min: 0, max: 1, step: 0.01 }}
-            onChange={(e) => setForm((prev) => ({ ...prev, epsilon: e.target.value }))}
+            onChange={(e) => onFormFieldChange("epsilon", e.target.value)}
+          />
+
+          <FieldHint label="Epsilon Decay" hint={MODEL_PARAMETER_HINTS.epsilon_decay} />
+          <TextField
+            size="small"
+            type="number"
+            value={form.epsilon_decay}
+            inputProps={{ min: 0, max: 1, step: 0.01 }}
+            onChange={(e) => onFormFieldChange("epsilon_decay", e.target.value)}
           />
 
           <FieldHint label="Max Steps" hint={MODEL_PARAMETER_HINTS.max_steps} />
@@ -106,7 +119,39 @@ export default function ModelParametersPanel({
             type="number"
             value={form.max_steps}
             inputProps={{ min: 10, max: 2000 }}
-            onChange={(e) => setForm((prev) => ({ ...prev, max_steps: e.target.value }))}
+            onChange={(e) => onFormFieldChange("max_steps", e.target.value)}
+          />
+
+          <Divider sx={{ my: 0.5 }} />
+          <Typography variant="body2" sx={{ fontWeight: 700, letterSpacing: "0.03em", textTransform: "uppercase" }}>
+            Reward Configuration
+          </Typography>
+
+          <FieldHint label="Step Reward" hint={MODEL_PARAMETER_HINTS.step_reward} />
+          <TextField
+            size="small"
+            type="number"
+            value={form.rewards?.step_reward}
+            inputProps={{ step: 0.01 }}
+            onChange={(e) => onRewardFieldChange("step_reward", e.target.value)}
+          />
+
+          <FieldHint label="Wall Penalty" hint={MODEL_PARAMETER_HINTS.wall_penalty} />
+          <TextField
+            size="small"
+            type="number"
+            value={form.rewards?.wall_penalty}
+            inputProps={{ step: 0.01 }}
+            onChange={(e) => onRewardFieldChange("wall_penalty", e.target.value)}
+          />
+
+          <FieldHint label="Goal Reward" hint={MODEL_PARAMETER_HINTS.goal_reward} />
+          <TextField
+            size="small"
+            type="number"
+            value={form.rewards?.goal_reward}
+            inputProps={{ step: 0.01 }}
+            onChange={(e) => onRewardFieldChange("goal_reward", e.target.value)}
           />
         </Stack>
       </AccordionDetails>

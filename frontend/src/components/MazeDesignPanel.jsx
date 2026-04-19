@@ -1,4 +1,4 @@
-import {
+﻿import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
@@ -11,22 +11,26 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-export default function MazeDesignPanel({
-  expanded,
-  onToggle,
-  mazeDesign,
-  wallCount,
-  gridSizeInput,
-  setGridSizeInput,
-  onCreateGrid,
-  tileTool,
-  setTileTool,
-  wallCountInput,
-  setWallCountInput,
-  maxRandomWalls,
-  onRandomWalls,
-  onClearWalls,
-}) {
+import { MAX_GRID_SIZE, MIN_GRID_SIZE, TILE_TOOLS } from "../constants";
+
+export default function MazeDesignPanel({ model }) {
+  const {
+    expanded,
+    onToggle,
+    mazeDesign,
+    wallCount,
+    gridSizeInput,
+    setGridSizeInput,
+    onCreateGrid,
+    tileTool,
+    setTileTool,
+    wallCountInput,
+    setWallCountInput,
+    maxRandomWalls,
+    onRandomWalls,
+    onClearWalls,
+  } = model;
+
   return (
     <Accordion expanded={expanded} onChange={onToggle}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -46,7 +50,7 @@ export default function MazeDesignPanel({
             label="Grid Size (n)"
             type="number"
             value={gridSizeInput}
-            inputProps={{ min: 4, max: 30 }}
+            inputProps={{ min: MIN_GRID_SIZE, max: MAX_GRID_SIZE }}
             onChange={(e) => setGridSizeInput(e.target.value)}
           />
           <Button fullWidth variant="contained" onClick={onCreateGrid}>
@@ -58,15 +62,15 @@ export default function MazeDesignPanel({
           <Stack direction="row" spacing={1}>
             <Button
               fullWidth
-              variant={tileTool === "start" ? "contained" : "outlined"}
-              onClick={() => setTileTool("start")}
+              variant={tileTool === TILE_TOOLS.START ? "contained" : "outlined"}
+              onClick={() => setTileTool(TILE_TOOLS.START)}
             >
               Place Start
             </Button>
             <Button
               fullWidth
-              variant={tileTool === "goal" ? "contained" : "outlined"}
-              onClick={() => setTileTool("goal")}
+              variant={tileTool === TILE_TOOLS.GOAL ? "contained" : "outlined"}
+              onClick={() => setTileTool(TILE_TOOLS.GOAL)}
             >
               Place Goal
             </Button>
@@ -75,15 +79,15 @@ export default function MazeDesignPanel({
           <Stack direction="row" spacing={1}>
             <Button
               fullWidth
-              variant={tileTool === "wall" ? "contained" : "outlined"}
-              onClick={() => setTileTool("wall")}
+              variant={tileTool === TILE_TOOLS.WALL ? "contained" : "outlined"}
+              onClick={() => setTileTool(TILE_TOOLS.WALL)}
             >
               Toggle Wall
             </Button>
             <Button
               fullWidth
-              variant={tileTool === "erase" ? "contained" : "outlined"}
-              onClick={() => setTileTool("erase")}
+              variant={tileTool === TILE_TOOLS.ERASE ? "contained" : "outlined"}
+              onClick={() => setTileTool(TILE_TOOLS.ERASE)}
             >
               Erase Wall
             </Button>
