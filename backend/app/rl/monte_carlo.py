@@ -1,6 +1,5 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-from collections import defaultdict
 from typing import Any, Dict, List, Tuple
 
 from .base import BaseRLModel
@@ -11,8 +10,6 @@ class MonteCarloModel(BaseRLModel):
     label = "Monte Carlo Control"
 
     def train(self) -> Dict[str, Any]:
-        returns_sum = defaultdict(float)
-        returns_count = defaultdict(float)
         episode_rewards: List[float] = []
 
         for episode_index in range(1, self.episodes + 1):
@@ -40,9 +37,9 @@ class MonteCarloModel(BaseRLModel):
                 if key in visited_pairs:
                     continue
                 visited_pairs.add(key)
-                returns_sum[key] += g_return
-                returns_count[key] += 1.0
-                self.q_table[state, action] = returns_sum[key] / returns_count[key]
+                self.q_table[state, action] += self.alpha * (
+                    g_return - self.q_table[state, action]
+                )
 
             episode_rewards.append(total_reward)
             self._report_progress(episode_index, episode_path)
